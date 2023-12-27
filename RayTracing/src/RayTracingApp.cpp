@@ -6,10 +6,19 @@
 #include "Toffee/Random.h"
 /*********************************/
 #include "Renderer.h"
+#include "Camera.h"
 
 class ExampleLayer : public Toffee::Layer
 {
 public:
+	ExampleLayer()
+		:m_Camera(45.0f, 0.1f, 100.0f) {}
+
+	virtual void OnUpdate(float ts) override
+	{
+		m_Camera.OnUpdate(ts);
+	}
+
 	virtual void OnUIRender() override
 	{
 		ImGui::Begin("Settings");
@@ -24,11 +33,10 @@ public:
 		static float radius = 0.5f;
 		ImGui::DragFloat("Radius", &radius, 0.01f, 0.0f, 1.0f);
 
-		static float lightDir[3] = { -1.0f, -1.0f, -1.0f };
+		//static float lightDir[3] = { -1.0f, -1.0f, -1.0f };
 		//static glm::vec3 lightDir = { -1.0f, -1.0f, -1.0f };
-		ImGui::DragFloat3("LightDir", &lightDir[0], 0.01f, -1.0f, 1.0f);
-
-		m_Renderer.SetLightDir({ lightDir[0], lightDir[1], lightDir[2]});
+		//ImGui::DragFloat3("LightDir", &lightDir[0], 0.01f, -1.0f, 1.0f);
+		//m_Renderer.SetLightDir({ lightDir[0], lightDir[1], lightDir[2]});
 
 		m_Renderer.SetRadius(radius);
 
@@ -57,7 +65,8 @@ public:
 	{
 		Toffee::Timer timer;
 		m_Renderer.OnResize(m_ViewportWidth, m_ViewportHeight);
-		m_Renderer.Render();
+		m_Camera.OnResize(m_ViewportWidth, m_ViewportHeight);
+		m_Renderer.Render(m_Camera);
 		m_LastRenderTime = timer.ElapsedMillis();
 	}
 
@@ -66,6 +75,7 @@ private:
 	uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
 	Renderer m_Renderer;
+	Camera m_Camera;
 	float m_LastRenderTime = 0.0f;
 
 };
