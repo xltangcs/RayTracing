@@ -16,11 +16,27 @@ public:
 	ExampleLayer()
 		:m_Camera(45.0f, 0.1f, 100.0f)
 	{
+		Material& pinkSphere = m_Scene.Materials.emplace_back();
+		pinkSphere.Albedo = { 1.0f, 0.0f, 1.0f };
+		pinkSphere.Roughness = 0.0f;
+
+		Material& blueSphere = m_Scene.Materials.emplace_back();
+		blueSphere.Albedo = { 0.2f, 0.3f, 1.0f };
+		blueSphere.Roughness = 0.1f;
+
 		{
 			Sphere sphere;
-			sphere.Position = { 2.0f, 2.0f, -5.0f };
+			sphere.Position = { 0.0f, 0.0f, 0.0f };
 			sphere.Radius = 0.5f;
-			sphere.Albedo = { 0.2f, 0.3f, 1.0f };
+			sphere.MaterialIndex = 0;
+			m_Scene.Spheres.push_back(sphere);
+		}
+
+		{
+			Sphere sphere;
+			sphere.Position = { 1.0f, 100.5f, -5.0f };
+			sphere.Radius = 100.0f;
+			sphere.MaterialIndex = 1;
 			m_Scene.Spheres.push_back(sphere);
 		}
 	}
@@ -43,9 +59,13 @@ public:
 		ImGui::Text("The Last Render time: %.3fms", m_LastRenderTime);
 		ImGui::Text("The average fps: %.3f", ImGui::GetIO().Framerate);
 
-		static glm::vec3 lightDir = { -1.0f, -1.0f, -1.0f };
+		static glm::vec3 lightDir = { -1.0f, 0.5f, -1.0f };
 		ImGui::DragFloat3("Light Dir", glm::value_ptr(lightDir), 0.01f);
 		m_Renderer.SetLightDir(lightDir);
+
+		static int bounces = 2;
+		ImGui::InputInt("Bounces", &bounces);
+		m_Renderer.SetBounces(bounces);
 
 		ImGui::End();
 
@@ -58,7 +78,21 @@ public:
 			Sphere& sphere = m_Scene.Spheres[i];
 			ImGui::DragFloat3("Position", glm::value_ptr(sphere.Position), 0.01f);
 			ImGui::DragFloat("Radius", &sphere.Radius, 0.01f);
-			ImGui::ColorEdit3("Albedo", glm::value_ptr(sphere.Albedo));
+			ImGui::InputInt("Material Index", &sphere.MaterialIndex);
+			ImGui::Separator();
+
+			ImGui::PopID();
+		}
+
+		for (size_t i = 0; i < m_Scene.Materials.size(); i++)
+		{
+			ImGui::PushID(i);
+
+			Material& material = m_Scene.Materials[i];
+			ImGui::ColorEdit3("Albedo", glm::value_ptr(material.Albedo));
+			ImGui::DragFloat("Roughness", &material.Roughness, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Metallic", &material.Metallic, 0.01f, 0.0f, 1.0f);
+
 			ImGui::Separator();
 
 			ImGui::PopID();
