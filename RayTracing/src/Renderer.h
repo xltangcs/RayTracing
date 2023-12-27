@@ -49,6 +49,8 @@ private:
 
 	uint32_t m_FrameIndex = 1;
 
+	std::vector<uint32_t> m_ImageHorizontalIter, m_ImageVerticalIter;
+
 	const Camera* m_ActiveCamera = nullptr;
 	const Scene* m_ActiveScene = nullptr;
 };
