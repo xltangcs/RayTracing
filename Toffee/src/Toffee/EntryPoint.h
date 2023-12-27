@@ -21,7 +21,7 @@ namespace Toffee {
 
 }
 
-#ifdef WL_DIST
+#ifdef TF_DIST
 
 #include <Windows.h>
 

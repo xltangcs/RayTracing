@@ -24,6 +24,12 @@ public:
 		static float radius = 0.5f;
 		ImGui::DragFloat("Radius", &radius, 0.01f, 0.0f, 1.0f);
 
+		static float lightDir[3] = { -1.0f, -1.0f, -1.0f };
+		//static glm::vec3 lightDir = { -1.0f, -1.0f, -1.0f };
+		ImGui::DragFloat3("LightDir", &lightDir[0], 0.01f, -1.0f, 1.0f);
+
+		m_Renderer.SetLightDir({ lightDir[0], lightDir[1], lightDir[2]});
+
 		m_Renderer.SetRadius(radius);
 
 		ImGui::End();
