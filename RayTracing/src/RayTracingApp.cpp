@@ -43,7 +43,8 @@ public:
 
 	virtual void OnUpdate(float ts) override
 	{
-		m_Camera.OnUpdate(ts);
+		if (m_Camera.OnUpdate(ts))
+			m_Renderer.ResetFrameIndex();
 	}
 
 	virtual void OnUIRender() override
@@ -59,13 +60,13 @@ public:
 		ImGui::Text("The Last Render time: %.3fms", m_LastRenderTime);
 		ImGui::Text("The average fps: %.3f", ImGui::GetIO().Framerate);
 
-		static glm::vec3 lightDir = { -1.0f, 0.5f, -1.0f };
-		ImGui::DragFloat3("Light Dir", glm::value_ptr(lightDir), 0.01f);
-		m_Renderer.SetLightDir(lightDir);
-
-		static int bounces = 2;
-		ImGui::InputInt("Bounces", &bounces);
-		m_Renderer.SetBounces(bounces);
+		ImGui::DragFloat3("Light Dir", glm::value_ptr(m_Renderer.m_LightDir), 0.01f);
+		ImGui::InputInt("Bounces", &m_Renderer.m_Bounces);
+		ImGui::Checkbox("Accumulate", &m_Renderer.Accumulate);
+		if (ImGui::Button("Reset"))
+		{
+			m_Renderer.ResetFrameIndex();
+		}
 
 		ImGui::End();
 

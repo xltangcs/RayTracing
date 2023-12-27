@@ -13,6 +13,11 @@
 class Renderer
 {
 public:
+	bool Accumulate = true;
+
+	glm::vec3 m_LightDir = { -1.0f, 0.5f, -1.0f };
+	int m_Bounces = 2;
+public:
 	Renderer() = default;
 	~Renderer() = default;
 
@@ -20,8 +25,8 @@ public:
 	void Render(const Scene& scene, const Camera &camera);
 
 	std::shared_ptr<Toffee::Image> GetFinalImage() const { return  m_FinalImage; }
-	void SetLightDir(glm::vec3 lightDir) { this->m_LightDir = lightDir; }
-	void SetBounces(int bounces) { this->m_Bounces = bounces; }
+
+	void ResetFrameIndex() { m_FrameIndex = 1; }
 private:
 	struct HitPayload
 	{
@@ -40,10 +45,10 @@ private:
 private:
 	std::shared_ptr<Toffee::Image> m_FinalImage;
 	uint32_t* m_ImageData = nullptr;
+	glm::vec4* m_AccumulationData = nullptr;
+
+	uint32_t m_FrameIndex = 1;
 
 	const Camera* m_ActiveCamera = nullptr;
 	const Scene* m_ActiveScene = nullptr;
-
-	glm::vec3 m_LightDir = { -1.0f, 0.5f, -1.0f };
-	int m_Bounces = 2;
 };
