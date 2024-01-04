@@ -1,6 +1,5 @@
 #include "Application.h"
 
-#include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
@@ -9,7 +8,6 @@
 #if defined(IMGUI_IMPL_OPENGL_ES2)
     #include <GLES2/gl2.h>
 #endif
-#include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
@@ -107,16 +105,16 @@ Application::Application(const std::string& applicationname)
 
 Application::~Application()
 {
-    shutdown();
+    Close();
 }
 
 void Application::Run()
 {
     m_Running = true;
-    bool dockspace = true;
+    static bool dockspace = true;
     // Our state
     bool show_demo_window = true;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 clear_color = ImVec4(0.8f, 0.1f, 0.1f, 1.00f);
     ImGuiIO& io = ImGui::GetIO();
 
     while (!glfwWindowShouldClose(m_GLFWwindow) && m_Running)
@@ -135,10 +133,18 @@ void Application::Run()
         ImGui::NewFrame();
         //ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
         ShowExampleAppDockSpace(&dockspace);
+        for (auto imguilayer : m_ImGuiLayerVector)
+        {
+            imguilayer->ShowUI();
+        }
 
 
-        ImGui::ShowDemoWindow(&show_demo_window);
+        //ImGui::ShowDemoWindow(&show_demo_window);
 
+        
+    /*    ImGui::Begin("test");
+        ImGui::Button("button");
+        ImGui::End();*/
 
 
         // Rendering
@@ -267,7 +273,8 @@ void Application::InitImGui()
     //IM_ASSERT(font != nullptr);
 }
 
-void Application::shutdown()
+void Application::Close()
 {
-
+    m_Running = false;
 }
+
