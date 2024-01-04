@@ -6,4 +6,5 @@ workspace "ParticleSystem"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+include "External.lua"
 include "ParticleSystem"

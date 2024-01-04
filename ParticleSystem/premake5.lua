@@ -14,7 +14,16 @@ project "ParticleSystem"
    {
       "../vendor/imgui",
       "../vendor/glfw/include",
+      "../vendor/glad/include",
    }
+
+   links 
+	{ 
+		"glfw",
+		"glad",
+		"imgui",
+      "opengl32.lib",
+	}
 
 
    targetdir ("../bin/" .. outputdir .. "/%{prj.name}")

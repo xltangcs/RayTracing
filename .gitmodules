@@ -1,0 +1,6 @@
+[submodule "vendor/imgui"]
+	path = vendor/imgui
+	url = https://github.com/xltangcs/imgui
+[submodule "vendor/glfw"]
+	path = vendor/glfw
+	url = git@github.com:xltangcs/glfw.git
