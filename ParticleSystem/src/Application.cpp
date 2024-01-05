@@ -100,7 +100,7 @@ void ShowExampleAppDockSpace(bool* p_open)
 Application::Application(const std::string& applicationname)
     : m_ApplicationName(applicationname)
 {
-    InitImGui();
+    Init();
 }
 
 Application::~Application()
@@ -133,6 +133,7 @@ void Application::Run()
         ImGui::NewFrame();
         //ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
         ShowExampleAppDockSpace(&dockspace);
+
         for (auto imguilayer : m_ImGuiLayerVector)
         {
             imguilayer->ShowUI();
@@ -149,11 +150,11 @@ void Application::Run()
 
         // Rendering
         ImGui::Render();
-        int display_w, display_h;
-        glfwGetFramebufferSize(m_GLFWwindow, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
+        //int display_w, display_h;
+        //glfwGetFramebufferSize(m_GLFWwindow, &display_w, &display_h);
+        ////glViewport(0, 0, display_w, display_h);
+        //glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+        //glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // Update and Render additional Platform Windows
@@ -182,8 +183,18 @@ void Application::Run()
     glfwTerminate();
 }
 
+void Application::Close()
+{
+    m_Running = false;
+}
 
-void Application::InitImGui()
+void Application::PushImGuiLayer(const std::shared_ptr<ImGuiLayer>& layer)
+{
+    m_ImGuiLayerVector.emplace_back(layer);
+}
+
+
+void Application::Init()
 {
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -271,10 +282,17 @@ void Application::InitImGui()
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != nullptr);
+
+
+    // glad: load all OpenGL function pointers
+    // ---------------------------------------
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        printf("Failed to initialize GLAD\n");
+        return;
+    }
+
 }
 
-void Application::Close()
-{
-    m_Running = false;
-}
+
 

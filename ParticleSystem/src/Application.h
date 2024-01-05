@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "imgui.h"
+#include <glad/glad.h>
 #include <GLFW//glfw3.h>
 
 #include "ImGuiLayer.h"
@@ -15,18 +16,15 @@ public:
 	~Application();
 
 	void Run();
-
-	template<typename T>
-	void PushImGuiLayer()
-	{
-		static_assert(std::is_base_of<ImGuiLayer, T>::value, "Pushed type is not subclass of ImGuiLayer!");
-		m_ImGuiLayerVector.emplace_back(std::make_shared<T>());
-	}
-
 	void Close();
-private:
-	void InitImGui();
+	void PushImGuiLayer(const std::shared_ptr<ImGuiLayer>& layer);
+
+	GLFWwindow* GetGLFWwindow() { return m_GLFWwindow; }
+
 	
+
+private:
+	void Init();
 
 private:
 	std::string m_ApplicationName;
