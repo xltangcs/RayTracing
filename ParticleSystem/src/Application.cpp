@@ -22,6 +22,10 @@
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
 
+/*********************** static for Input class *******************************/ 
+static Application* s_Instance = nullptr;
+/************************************************************************ *****/
+
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
@@ -100,12 +104,18 @@ void ShowExampleAppDockSpace(bool* p_open)
 Application::Application(const std::string& applicationname)
     : m_ApplicationName(applicationname)
 {
+    s_Instance = this;
     Init();
 }
 
 Application::~Application()
 {
     Close();
+}
+
+Application& Application::Get()
+{
+    return *s_Instance;
 }
 
 void Application::Run()
@@ -127,6 +137,20 @@ void Application::Run()
         
         glfwPollEvents();
 
+        /********************** update *************************/
+        for (auto& imguilayer : m_ImGuiLayerVector)
+        {
+            imguilayer->OnUpdate(m_TimeStep);
+        }
+
+        float time = (float)glfwGetTime();
+        m_FrameTime = time - m_LastFrameTime;
+        m_TimeStep = glm::min<float>(m_FrameTime, 0.0333f);
+        m_LastFrameTime = time;
+
+        /********************** update end *********************/
+
+
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -134,7 +158,7 @@ void Application::Run()
         //ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
         ShowExampleAppDockSpace(&dockspace);
 
-        for (auto imguilayer : m_ImGuiLayerVector)
+        for (auto& imguilayer : m_ImGuiLayerVector)
         {
             imguilayer->ShowUI();
         }

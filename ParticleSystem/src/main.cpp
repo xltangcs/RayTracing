@@ -5,6 +5,8 @@
 
 #include "Image.h"
 #include "Shader.h"
+#include "Camera.h"
+#include "Renderer.h"
 #include "Framebuffer.h"
 #include "Application.h"
 
@@ -12,89 +14,59 @@ class MyImGuiLayer : public ImGuiLayer
 {
 public:
 	MyImGuiLayer()
-        : m_Shader("./assets/shaders/vertex.vs", "./assets/shaders/frag.fs"), m_Framebuffer(100, 80), m_Image("./assets/textures/Checkerboard.png")
+        : m_Framebuffer(100, 80), m_Camera(45.0f, 0.1f, 100.0f)
 	{
-		float vertices[] = {
-			// positions         // colors
-			 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
-			-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
-			 0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top 
-		};
-
-		glGenVertexArrays(1, &VAO);
-		glGenBuffers(1, &VBO);
-		// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-		glBindVertexArray(VAO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-		// position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		// color attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
+		
 	}
 	
 	virtual void ShowUI() override
 	{
-
-		ImGui::Begin("Image");
-
-		ImGui::Image((void*)m_Image.GetTextureID(), 
-			ImVec2(100, 100), 
-			ImVec2{ 0, 1 }, 
-			ImVec2{ 1, 0 });
-
-		ImGui::End();
-
-
 
 		ImGui::Begin("Viewport");
         // we access the ImGui window size
         float window_width = ImGui::GetContentRegionAvail().x;
         float window_height = ImGui::GetContentRegionAvail().y;
 
+		m_Width = (int) window_width;
+		m_Height = (int) window_height;
 
-        // we rescale the framebuffer to the actual window size here and reset the glViewport 
-        m_Framebuffer.Resize(window_width, window_height);
-        glViewport(0, 0, window_width, window_height);
+        glViewport(0, 0, (GLsizei)window_width, (GLsizei)window_height);
 
 
-        ImGui::Image((void*)m_Framebuffer.GetTextureID(), ImVec2(window_width, window_height), ImVec2 { 0, 1 }, ImVec2{ 1, 0 });
+        ImGui::Image((ImTextureID)m_Framebuffer.GetTextureID(), ImVec2(window_width, window_height), ImVec2 { 0, 1 }, ImVec2{ 1, 0 });
 
 		ImGui::End();
 
 
 		m_Framebuffer.Bind();//Render here
 		
-		// make sure we clear the framebuffer's content
-		glClearColor(0.8f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
-		m_Shader.use();
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glBindVertexArray(0);
-		glUseProgram(0);
+		m_Renderer.RenderCube(m_Camera);
+
 
 		m_Framebuffer.Unbind();
 
 		ImGui::ShowDemoWindow();
 	}
+
+	virtual void OnUpdate(float ts) override
+	{
+		m_Camera.OnUpdate(ts);
+		m_Camera.OnResize(m_Width, m_Height);
+		m_Framebuffer.Resize(m_Width, m_Height);
+	}
+
 private:
-	unsigned int VBO, VAO;
+	uint32_t m_Width = 100, m_Height = 100;
+	Camera m_Camera;
     Framebuffer m_Framebuffer;
-    Shader m_Shader;
-	Image m_Image;
+	
+	Renderer m_Renderer;
 };
 
 
 int main()
 {
-	Application* ParticleSystem = new Application("Particle System");
+	static Application* ParticleSystem = new Application("Particle System");
 	std::shared_ptr<MyImGuiLayer> myimguilayer = std::make_shared<MyImGuiLayer>();
 
 	ParticleSystem->PushImGuiLayer(myimguilayer);

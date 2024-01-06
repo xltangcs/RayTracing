@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include <glad/glad.h>
 #include <GLFW//glfw3.h>
+#include <glm/glm.hpp>
 
 #include "ImGuiLayer.h"
 
@@ -14,6 +15,8 @@ class Application {
 public:
 	Application(const std::string& applicationname = "App");
 	~Application();
+
+	static Application& Get();
 
 	void Run();
 	void Close();
@@ -27,6 +30,10 @@ private:
 	void Init();
 
 private:
+	float m_TimeStep = 0.0f;
+	float m_FrameTime = 0.0f;
+	float m_LastFrameTime = 0.0f;
+
 	std::string m_ApplicationName;
 	GLFWwindow* m_GLFWwindow = nullptr;
 	bool m_Running = false;

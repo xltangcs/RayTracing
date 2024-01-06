@@ -9,6 +9,7 @@ public:
 	virtual~ImGuiLayer() = default;
 
 	virtual void ShowUI() {};
+	virtual void OnUpdate(float ts) {};
 
 private:
 };

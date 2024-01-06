@@ -13,6 +13,7 @@ class Shader
 public:
     Shader() = default;
     Shader(const char* vertexPath, const char* fragmentPath);
+    ~Shader();
 
     unsigned int GetShaderID() const { return m_ShaderID; }
     
