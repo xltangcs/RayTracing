@@ -23,6 +23,8 @@ void Renderer::RenderCube(Camera& camera)
 
 	if (!m_CubeVA)
 	{
+
+        glEnable(GL_DEPTH_TEST);
         float vertices[] = {
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
          0.5f, -0.5f, -0.5f,  1.0f, 0.0f,

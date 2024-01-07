@@ -3,8 +3,6 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Image.h"
-#include "Shader.h"
 #include "Camera.h"
 #include "Renderer.h"
 #include "Framebuffer.h"
@@ -30,9 +28,6 @@ public:
 		m_Width = (int) window_width;
 		m_Height = (int) window_height;
 
-        glViewport(0, 0, (GLsizei)window_width, (GLsizei)window_height);
-
-
         ImGui::Image((ImTextureID)m_Framebuffer.GetTextureID(), ImVec2(window_width, window_height), ImVec2 { 0, 1 }, ImVec2{ 1, 0 });
 
 		ImGui::End();
@@ -42,7 +37,6 @@ public:
 		
 		m_Renderer.RenderCube(m_Camera);
 
-
 		m_Framebuffer.Unbind();
 
 		ImGui::ShowDemoWindow();
@@ -50,6 +44,7 @@ public:
 
 	virtual void OnUpdate(float ts) override
 	{
+		glViewport(0, 0, (GLsizei)m_Width, (GLsizei)m_Height);
 		m_Camera.OnUpdate(ts);
 		m_Camera.OnResize(m_Width, m_Height);
 		m_Framebuffer.Resize(m_Width, m_Height);
@@ -57,9 +52,9 @@ public:
 
 private:
 	uint32_t m_Width = 100, m_Height = 100;
+
 	Camera m_Camera;
     Framebuffer m_Framebuffer;
-	
 	Renderer m_Renderer;
 };
 

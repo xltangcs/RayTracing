@@ -31,6 +31,8 @@ void Camera::OnUpdate(float ts)
 	glm::vec2 delta = (mousePos - m_LastMousePosition) * 0.002f;
 	m_LastMousePosition = mousePos;
 
+	//TODO: Determine whether to edit based on mouse position discrimination
+
 	// mouse right PRESS status into editing mode
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS)
 	{
