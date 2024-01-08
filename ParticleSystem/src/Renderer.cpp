@@ -23,7 +23,6 @@ void Renderer::RenderCube(Camera& camera)
 
 	if (!m_CubeVA)
 	{
-
         glEnable(GL_DEPTH_TEST);
         float vertices[] = {
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -71,6 +70,7 @@ void Renderer::RenderCube(Camera& camera)
 
         unsigned int VBO = 0;
         glGenVertexArrays(1, &m_CubeVA);
+        //glCreateVertexArrays(1, &m_CubeVA);
         glGenBuffers(1, &VBO);
 
         glBindVertexArray(m_CubeVA);
@@ -125,14 +125,6 @@ void Renderer::RenderCube(Camera& camera)
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
-}
-
-void Renderer::Resize(uint32_t width, uint32_t height)
-{
-    if (m_Width != width)
-        m_Width = width;
-    if (m_Height != height)
-        m_Height = height;
 }
 
 

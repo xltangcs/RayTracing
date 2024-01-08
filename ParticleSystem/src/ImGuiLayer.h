@@ -8,7 +8,7 @@ public:
 	ImGuiLayer() = default;
 	virtual~ImGuiLayer() = default;
 
-	virtual void ShowUI() {};
+	virtual void ShowUI(float ts) {};
 	virtual void OnUpdate(float ts) {};
 
 private:

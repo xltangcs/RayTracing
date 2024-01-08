@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <vector>
 
 class Camera
 {
@@ -18,6 +17,7 @@ public:
 
 	const glm::vec3& GetPosition() const { return m_Position; }
 	const glm::vec3& GetDirection() const { return m_ForwardDirection; }
+	const float& GetFov() const { return m_VerticalFOV; }
 
 
 	float GetRotationSpeed();

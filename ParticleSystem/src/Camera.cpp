@@ -18,6 +18,7 @@ Camera::Camera(float verticalFOV, float nearClip, float farClip)
 void Camera::OnUpdate(float ts)
 {
 	GLFWwindow* window = Application::Get().GetGLFWwindow();
+	static bool isFirst = true;
 
 	auto IsKeyDown = [&window](int key) ->int {
 		return glfwGetKey(window, key) == GLFW_PRESS || glfwGetKey(window, key) == GLFW_REPEAT;
@@ -34,11 +35,15 @@ void Camera::OnUpdate(float ts)
 	//TODO: Determine whether to edit based on mouse position discrimination
 
 	// mouse right PRESS status into editing mode
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS)
+
+	if (!isFirst && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS)
 	{
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		return;
 	}
+
+	isFirst = false;
+
 
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
 	bool moved = false;
@@ -120,7 +125,6 @@ float Camera::GetRotationSpeed()
 void Camera::RecalculateProjection()
 {
 	m_Projection = glm::perspectiveFov(glm::radians(m_VerticalFOV), (float)m_ViewportWidth, (float)m_ViewportHeight, m_NearClip, m_FarClip);
-	//m_Projection = glm::perspective(glm::radians(m_VerticalFOV), (float)m_ViewportWidth /(float)m_ViewportHeight, m_NearClip, m_FarClip);
 	m_InverseProjection = glm::inverse(m_Projection);
 }
 

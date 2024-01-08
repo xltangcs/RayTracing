@@ -160,7 +160,7 @@ void Application::Run()
 
         for (auto& imguilayer : m_ImGuiLayerVector)
         {
-            imguilayer->ShowUI();
+            imguilayer->ShowUI(m_TimeStep);
         }
 
 
@@ -260,6 +260,14 @@ void Application::Init()
     glfwMakeContextCurrent(m_GLFWwindow);
     glfwSwapInterval(1); // Enable vsync
 
+    // glad: load all OpenGL function pointers
+// ---------------------------------------
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        printf("Failed to initialize GLAD\n");
+        return;
+    }
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -306,15 +314,6 @@ void Application::Init()
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != nullptr);
-
-
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        printf("Failed to initialize GLAD\n");
-        return;
-    }
 
 }
 
