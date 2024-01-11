@@ -3,29 +3,32 @@
 #include <glm/glm.hpp>
 
 #include <vector>
+#include <memory>
 
-struct Material
+#include "Material.h"
+#include "SceneObject.h"
+
+const float Infinity = std::numeric_limits<float>::max();;
+
+class Scene 
 {
-	glm::vec3 Albedo{ 0.6f, 0.7f, 0.8f };
-	float Roughness = 1.0f;
-	float Metallic = 0.0f;
+public:
+	Scene() = default;
+	Scene(std::shared_ptr<SceneObject> object);
 
-	glm::vec3 EmissionColor{ 0.0f };
-	float EmissionPower = 0.0f;
+	void AddSceneObject(std::shared_ptr<SceneObject> object);
+	void AddMaterial(std::shared_ptr<Material> material);
 
-	glm::vec3 GetEmission() const { return EmissionColor * EmissionPower; }
-};
+	bool TraceRay(const Ray& r, HitPayload& payload);
 
-struct Sphere
-{
-	glm::vec3 Position{ 0.0f };
-	float Radius = 0.5f;
+	std::shared_ptr<Material> GetMaterial(int materialIndex);
+	std::shared_ptr<SceneObject> GetSceneObject(int sceneObjectIndex);
 
-	int MaterialIndex = 0;
-};
+	const size_t GetSceneObjectSize() const { return m_SceneObjects.size(); }
+	const size_t GetMaterialSize() const { return m_Materials.size(); }
 
-struct Scene
-{
-	std::vector<Sphere> Spheres;
-	std::vector<Material> Materials;
+private:
+	std::vector<std::shared_ptr<SceneObject>> m_SceneObjects;
+	std::vector<std::shared_ptr<Material>> m_Materials;
+
 };

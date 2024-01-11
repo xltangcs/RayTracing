@@ -14,45 +14,64 @@ class ExampleLayer : public Toffee::Layer
 {
 public:
 	ExampleLayer()
-		:m_Camera(45.0f, 0.1f, 100.0f)
+		:m_Camera(45.0f, 0.1f, 100.0f), CurrentScene(FiveSphereScene)
 	{
-		Material& pinkSphere = m_Scene.Materials.emplace_back();
-		pinkSphere.Albedo = { 1.0f, 0.0f, 1.0f };
-		pinkSphere.Roughness = 0.0f;
-
-		Material& blueSphere = m_Scene.Materials.emplace_back();
-		blueSphere.Albedo = { 0.2f, 0.3f, 1.0f };
-		blueSphere.Roughness = 0.1f;
-
-		Material& orangeSphere = m_Scene.Materials.emplace_back();
-		orangeSphere.Albedo = { 0.8f, 0.5f, 0.2f };
-		orangeSphere.Roughness = 0.1f;
-		orangeSphere.EmissionColor = orangeSphere.Albedo;
-		orangeSphere.EmissionPower = 2.0f;
-
 		{
-			Sphere sphere;
-			sphere.Position = { 0.0f, 0.0f, 0.0f };
-			sphere.Radius = 1.0f;
-			sphere.MaterialIndex = 0;
-			m_Scene.Spheres.push_back(sphere);
+			FiveSphere.AddMaterial(std::make_shared<Lambertian>(glm::vec3(0.1f, 0.2f, 0.5f)) );
+			FiveSphere.AddMaterial(std::make_shared<Lambertian>(glm::vec3(0.8f, 0.8f, 0.0f)) );
+			FiveSphere.AddMaterial(std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 0.3f) );
+			FiveSphere.AddMaterial(std::make_shared<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 1.0f) );
+
+			FiveSphere.AddMaterial(std::make_shared<Dielectric>(1.5f) );
+		}	
+		{	
+			FiveSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -1.0f), 0.5f, 0));
+			FiveSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 100.5f, -1.0f), 100.0f, 1));
+			FiveSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(1.0f, 0.0f, -1.0f), 0.5f, 2));
+			FiveSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(-1.0f, 0.0f, 1.0f), 0.5f, 4));
+			FiveSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(-1.0f, 0.0f, 1.0f), -0.45f, 4));
 		}
 
 		{
-			Sphere sphere;
-			sphere.Position = { 2.0f, 0.0f, 0.0f };
-			sphere.Radius = 1.0f;
-			sphere.MaterialIndex = 2;
-			m_Scene.Spheres.push_back(sphere);
+			RandomSphere.AddMaterial(std::make_shared<Lambertian>(glm::vec3(0.5f, 0.5f, 0.5f)));
+			RandomSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 1000.0f, 0.0f), 999.0, 0));
+			RandomSphere.AddMaterial(std::make_shared<Dielectric>(1.5f));
+
+			int materialIndex = 1;
+
+			for (int a = -11; a < 11; a++)
+			{
+				for (int b = -11; b < 11; b++) 
+				{
+					float chooseMarerial = Toffee::Random::Float();
+					glm::vec3 center(a + 0.9f * Toffee::Random::Float(), 0.2f, b + 0.9 * Toffee::Random::Float());
+					if ((center - glm::vec3(4.0f, 0.2f, 0.0f)).length() > 0.9f)
+					{
+						if (chooseMarerial < 0.8f)//diffuse
+						{
+							auto albedo = Toffee::Random::Vec3();
+							RandomSphere.AddMaterial(std::make_shared<Lambertian>(albedo));
+							materialIndex++;
+							RandomSphere.AddSceneObject(std::make_shared<Sphere>(center, 0.2f, materialIndex));
+						}
+						else if (chooseMarerial < 0.95f)//Metal
+						{
+							auto albedo = Toffee::Random::Vec3(0.5f, 1.0f);
+							auto roughness = Toffee::Random::Float() * 0.5;
+							RandomSphere.AddMaterial(std::make_shared<Metal>(albedo, roughness));
+							materialIndex++;
+							RandomSphere.AddSceneObject(std::make_shared<Sphere>(center, 0.3f, materialIndex));
+						}
+						else
+						{
+							RandomSphere.AddSceneObject(std::make_shared<Sphere>(center, 0.4f, 1));
+						}
+					}
+				}
+			}
 		}
 
-		{
-			Sphere sphere;
-			sphere.Position = { 0.0f, 101.0f, 0.0f };
-			sphere.Radius = 100.0f;
-			sphere.MaterialIndex = 1;
-			m_Scene.Spheres.push_back(sphere);
-		}
+
 	}
 
 	virtual void OnUpdate(float ts) override
@@ -65,11 +84,6 @@ public:
 	{
 		ImGui::Begin("Settings");
 
-		if (ImGui::Button("Add Sphere"))
-		{
-			Sphere sphere;
-			m_Scene.Spheres.push_back(sphere);
-		}
 
 		ImGui::Text("The Last Render time: %.3fms", m_LastRenderTime);
 		ImGui::Text("The average fps: %.3f", ImGui::GetIO().Framerate);
@@ -77,47 +91,45 @@ public:
 		ImGui::DragFloat3("Light Dir", glm::value_ptr(m_Renderer.m_LightDir), 0.01f);
 		ImGui::InputInt("Bounces", &m_Renderer.m_Bounces);
 		ImGui::Checkbox("Accumulate", &m_Renderer.Accumulate);
+
 		if (ImGui::Button("Reset"))
 		{
 			m_Renderer.ResetFrameIndex();
 		}
+		if (ImGui::Button("FiveSphere"))
+		{
+			CurrentScene = FiveSphereScene;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("RandomSphere"))
+		{
+			CurrentScene = RandomSphereScene;
+		}
 
 		ImGui::End();
 
-		ImGui::Begin("Scene");
-
-		for (int i = 0; i < m_Scene.Spheres.size();i++)
+		if (CurrentScene != RandomSphereScene)
 		{
-			ImGui::PushID(i);
+			ImGui::Begin("Scene");
 
-			Sphere& sphere = m_Scene.Spheres[i];
-			ImGui::DragFloat3("Position", glm::value_ptr(sphere.Position), 0.01f);
-			ImGui::DragFloat("Radius", &sphere.Radius, 0.01f);
-			//ImGui::InputInt("Material Index", &sphere.MaterialIndex);
+			for (int i = 0; i < FiveSphere.GetSceneObjectSize(); i++)
+			{
+				ImGui::PushID(i);
 
-			ImGui::Separator();
+				std::shared_ptr<Sphere> sphere = std::dynamic_pointer_cast<Sphere>(FiveSphere.GetSceneObject(i));
 
-			ImGui::PopID();
-		}
+				ImGui::DragFloat3("Position", glm::value_ptr(sphere->GetPosition()), 0.01f);
+				ImGui::DragFloat("Radius", &(sphere->GetRadius()), 0.01f);
+				ImGui::SliderInt("Material Index", &sphere->GetMaterialIndex(), 0, (int)FiveSphere.GetMaterialSize());
+				ImGui::Separator();
 
-		for (size_t i = 0; i < m_Scene.Materials.size(); i++)
-		{
-			ImGui::PushID(i);
+				ImGui::PopID();
+			}
 
-			Material& material = m_Scene.Materials[i];
-			ImGui::ColorEdit3("Albedo", glm::value_ptr(material.Albedo));
-			ImGui::DragFloat("Roughness", &material.Roughness, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("Metallic", &material.Metallic, 0.01f, 0.0f, 1.0f);
-			ImGui::ColorEdit3("Emission Color", glm::value_ptr(material.EmissionColor));
-			ImGui::DragFloat("Emission Power", &material.EmissionPower, 0.05f, 0.0f, FLT_MAX);
-
-			ImGui::Separator();
-
-			ImGui::PopID();
+			ImGui::End();
 		}
 
 
-		ImGui::End();
 
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -133,9 +145,9 @@ public:
 			ImGui::Image(image->GetDescriptorSet(), { (float)image->GetWidth(), (float)image->GetHeight()});
 		}
 
-
 		ImGui::End();
 		ImGui::PopStyleVar();
+
 		Render();
 	}
 
@@ -144,9 +156,30 @@ public:
 		Toffee::Timer timer;
 		m_Renderer.OnResize(m_ViewportWidth, m_ViewportHeight);
 		m_Camera.OnResize(m_ViewportWidth, m_ViewportHeight);
-		m_Renderer.Render(m_Scene, m_Camera);
+
+		switch (CurrentScene)
+		{
+			case FiveSphereScene:
+			{
+				m_Renderer.Render(FiveSphere, m_Camera);
+				break;
+			}
+			case RandomSphereScene:
+			{
+				m_Renderer.Render(RandomSphere, m_Camera);
+				break;
+			}
+			default: m_Renderer.Render(FiveSphere, m_Camera); break;
+		}
+
 		m_LastRenderTime = timer.ElapsedMillis();
 	}
+
+private:
+	enum SceneClass{
+		FiveSphereScene = 0,
+		RandomSphereScene = 1
+	};
 
 
 private:
@@ -154,7 +187,11 @@ private:
 
 	Renderer m_Renderer;
 	Camera m_Camera;
-	Scene m_Scene;
+
+	SceneClass CurrentScene;
+	Scene FiveSphere;
+	Scene RandomSphere;
+
 	float m_LastRenderTime = 0.0f;
 
 };

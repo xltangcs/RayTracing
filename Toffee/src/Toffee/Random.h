@@ -29,6 +29,11 @@ namespace Toffee {
 			return (float)s_Distribution(s_RandomEngine) / (float)std::numeric_limits<uint32_t>::max();
 		}
 
+		static double Double()
+		{
+			return (double)s_Distribution(s_RandomEngine) / (double)std::numeric_limits<uint32_t>::max();
+		}
+
 		static glm::vec3 Vec3()
 		{
 			return glm::vec3(Float(), Float(), Float());
