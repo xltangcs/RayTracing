@@ -1,30 +1,38 @@
 #include "Scene.h"
 
+AABB SurroundingBox(AABB box0, AABB box1)
+{
+    glm::vec3 small(std::min(box0.GetMinBound().x, box1.GetMinBound().x),
+        std::min(box0.GetMinBound().y, box1.GetMinBound().y),
+        std::min(box0.GetMinBound().z, box1.GetMinBound().z)
+    );
+
+    glm::vec3 big(std::max(box0.GetMaxBound().x, box1.GetMaxBound().x),
+        std::max(box0.GetMaxBound().y, box1.GetMaxBound().y),
+        std::max(box0.GetMaxBound().z, box1.GetMaxBound().z)
+    );
+
+    return AABB(small, big);
+}
+
 Scene::Scene(std::shared_ptr<SceneObject> object)
 {
     AddSceneObject(object);
 }
-
-
 
 void Scene::AddSceneObject(std::shared_ptr<SceneObject> object)
 {
     m_SceneObjects.push_back(object);
 }
 
-void Scene::AddMaterial(std::shared_ptr<Material> material)
-{
-    m_Materials.push_back(material);
-}
-
-bool Scene::TraceRay(const Ray& r, HitPayload& payload)
+bool Scene::Hit(const Ray& ray, float t_min, float t_max, HitPayload& payload) const
 {
     HitPayload temp;
     bool hit_anything = false;
     float closest_so_far = Infinity;
 
     for (const auto& object : m_SceneObjects) {
-        if (object->Hit(r, 0.0001f, closest_so_far, temp)) {
+        if (object->Hit(ray, 0.0001f, closest_so_far, temp)) {
             hit_anything = true;
             closest_so_far = temp.HitDistance;
             payload = temp;
@@ -34,15 +42,25 @@ bool Scene::TraceRay(const Ray& r, HitPayload& payload)
     return hit_anything;
 }
 
-std::shared_ptr<Material> Scene::GetMaterial(int materialIndex)
+bool Scene::BoundingBox(float t0, float t1, AABB& output_box) const
 {
-    if (materialIndex < m_Materials.size()) {
-        return m_Materials[materialIndex];
+    if (m_SceneObjects.empty()) return false;
+
+    AABB tempbox;
+    bool firstbox = true;
+
+    for (const auto& object : m_SceneObjects) {
+        if (!object->BoundingBox(t0, t1, tempbox) )
+        {
+            return false;
+        }
+        output_box = firstbox ? tempbox : SurroundingBox(output_box, tempbox);
+        firstbox = false;
     }
-    else {
-        return nullptr;
-    }
+
+    return true;
 }
+
 
 std::shared_ptr<SceneObject> Scene::GetSceneObject(int sceneObjectIndex)
 {
@@ -52,4 +70,98 @@ std::shared_ptr<SceneObject> Scene::GetSceneObject(int sceneObjectIndex)
     else {
         return nullptr;
     }
+}
+
+BVHNode::BVHNode(Scene& scene, float t0, float t1)
+    : BVHNode(scene.GetSceneObjects(), 0, scene.GetSceneObjectSize(), t0, t1)
+{
+}
+
+BVHNode::BVHNode(std::vector<std::shared_ptr<SceneObject>>& objects, size_t start, size_t end, float t0, float t1)
+{
+    int axis = Toffee::Random::UInt(0, 2);
+
+    auto comparator = (axis == 0) ? box_x_compare
+                    : (axis == 1) ? box_y_compare
+                    : box_z_compare;
+
+    size_t object_span = end - start;
+
+    if (object_span == 1) 
+    {
+        m_LeftChild  = objects[start];
+        m_RightChild = objects[start];
+    }
+    else if (object_span == 2) 
+    {
+        if (comparator(objects[start], objects[start + 1])) {
+            m_LeftChild  = objects[start];
+            m_RightChild = objects[start + 1];
+        }
+        else {
+            m_LeftChild  = objects[start + 1];
+            m_RightChild = objects[start];
+        }
+    }
+    else 
+    {
+        std::sort(objects.begin() + start, objects.begin() + end, comparator);
+
+        auto mid = start + object_span / 2;
+        m_LeftChild = std::make_shared<BVHNode>(objects, start, mid, t0, t1);
+        m_RightChild = std::make_shared<BVHNode>(objects, mid, end, t0, t1);
+    }
+
+    AABB box_left, box_right;
+
+    if (!m_LeftChild->BoundingBox(t0, t1, box_left)
+        || !m_RightChild->BoundingBox(t0, t1, box_right)
+        )
+        std::cerr << "No bounding box in bvh_node constructor.\n";
+
+    m_BoundingBox = SurroundingBox(box_left, box_right);
+}
+
+bool BVHNode::Hit(const Ray& ray, float t_min, float t_max, HitPayload& payload) const
+{
+    if (! m_BoundingBox.Hit(ray, t_min, t_max))
+        return false;
+
+    bool lefthit  = m_LeftChild ->Hit(ray, t_min, t_max, payload);
+    bool righthit = m_RightChild->Hit(ray, t_min, lefthit ? payload.HitDistance : t_max, payload);
+
+    return lefthit || righthit;
+}
+
+bool BVHNode::BoundingBox(float t0, float t1, AABB& output_box) const
+{
+    output_box = m_BoundingBox;
+    return true;
+}
+
+bool BVHNode::box_compare(const std::shared_ptr<SceneObject> a, const std::shared_ptr<SceneObject> b, int axis_index)
+{
+    AABB boxa, boxb;
+
+    if (!a->BoundingBox(0, 0, boxa) || !b->BoundingBox(0, 0, boxb))
+    {
+        std::cerr << "No bounding box in bvh_node constructor.\n";
+    }
+
+    return boxa.GetMinBound()[axis_index] < boxb.GetMinBound()[axis_index];
+}
+
+bool BVHNode::box_x_compare(const std::shared_ptr<SceneObject> a, const std::shared_ptr<SceneObject> b)
+{
+    return box_compare(a, b, 0);
+}
+
+bool BVHNode::box_y_compare(const std::shared_ptr<SceneObject> a, const std::shared_ptr<SceneObject> b)
+{
+    return box_compare(a, b, 1);
+}
+
+bool BVHNode::box_z_compare(const std::shared_ptr<SceneObject> a, const std::shared_ptr<SceneObject> b)
+{
+    return box_compare(a, b, 2);
 }

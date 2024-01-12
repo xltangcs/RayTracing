@@ -4,6 +4,7 @@
 #include "Toffee/Random.h"
 
 #include <memory>
+#include <vector>
 #include <glm/glm.hpp>
 
 #include "Camera.h"
@@ -24,9 +25,13 @@ public:
 	~Renderer() = default;
 
 	void OnResize(uint32_t width, uint32_t height);
-	void Render(Scene& scene, const Camera &camera);
+	void Render(SceneObject& scene, Camera &camera);
+
+	void AddMaterial(std::shared_ptr<Material> material);
+	std::shared_ptr<Material> GetMaterial(int materialIndex);
 
 	std::shared_ptr<Toffee::Image> GetFinalImage() const { return  m_FinalImage; }
+	const size_t GetMaterialSize() const { return m_Materials.size(); }
 
 	void ResetFrameIndex() { m_FrameIndex = 1; }
 private:
@@ -41,6 +46,8 @@ private:
 
 	std::vector<uint32_t> m_ImageHorizontalIter, m_ImageVerticalIter;
 
-	const Camera* m_ActiveCamera = nullptr;
-	Scene*  m_ActiveScene  = nullptr;
+	Camera* m_ActiveCamera = nullptr;
+	SceneObject*  m_ActiveScene  = nullptr;
+
+	std::vector<std::shared_ptr<Material>> m_Materials;
 };

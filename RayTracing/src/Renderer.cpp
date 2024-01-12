@@ -41,14 +41,14 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 		m_ImageVerticalIter[i] = i;
 }
 
-void Renderer::Render(Scene& scene, const Camera& camera)
+void Renderer::Render(SceneObject& scene, Camera& camera)
 {
 	m_ActiveCamera = &camera;
 	m_ActiveScene = &scene;
 
 	if (m_FrameIndex == 1)
 		memset(m_AccumulationData, 0, m_FinalImage->GetWidth() * m_FinalImage->GetHeight() * sizeof(glm::vec3));
-#define MT 1
+#define MT 0
 #ifdef  MT
 	std::for_each(std::execution::par, m_ImageVerticalIter.begin(), m_ImageVerticalIter.end(),
 		[this](uint32_t y)
@@ -92,18 +92,33 @@ void Renderer::Render(Scene& scene, const Camera& camera)
 		m_FrameIndex = 1;
 }
 
+void Renderer::AddMaterial(std::shared_ptr<Material> material)
+{
+	m_Materials.push_back(material);
+}
+
+std::shared_ptr<Material> Renderer::GetMaterial(int materialIndex)
+{
+	if (materialIndex < m_Materials.size()) {
+		return m_Materials[materialIndex];
+	}
+	else {
+		return nullptr;
+	}
+}
+
 glm::vec3 Renderer::ray_color(const Ray& ray, int depth)
 {
 	if (depth <= 0)
 		return glm::vec3(0.0f, 0.0f, 0.0f);
 
 	HitPayload payload;
-	if (m_ActiveScene->TraceRay(ray, payload))
+	if (m_ActiveScene->Hit(ray, 0.001f, std::numeric_limits<float>::max(), payload))
 	{
 		Ray newray;
 		glm::vec3 color;
 
-		if (m_ActiveScene->GetMaterial(payload.MaterialIndex)->Scatter(ray, payload, color, newray))
+		if (GetMaterial(payload.MaterialIndex)->Scatter(ray, payload, color, newray))
 		{
 			return color * ray_color(newray, depth - 1);
 		}
@@ -114,10 +129,4 @@ glm::vec3 Renderer::ray_color(const Ray& ray, int depth)
 	glm::vec3 unit_direction = glm::normalize(ray.Direction);
 	float t = 0.5f * (unit_direction.y + 1.0f);
 	return glm::vec3(1.0f, 1.0f, 1.0f) * (1.0f - t) + t * glm::vec3(0.5f, 0.7f, 1.0f);
-
 }
-
-
-
-
-

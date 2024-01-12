@@ -14,64 +14,84 @@ class ExampleLayer : public Toffee::Layer
 {
 public:
 	ExampleLayer()
-		:m_Camera(45.0f, 0.1f, 100.0f), CurrentScene(FiveSphereScene)
+		:m_Camera(45.0f, 0.1f, 100.0f), CurrentScene(BaseSphereScene), BVH(true)
 	{
-		{
-			FiveSphere.AddMaterial(std::make_shared<Lambertian>(glm::vec3(0.1f, 0.2f, 0.5f)) );
-			FiveSphere.AddMaterial(std::make_shared<Lambertian>(glm::vec3(0.8f, 0.8f, 0.0f)) );
-			FiveSphere.AddMaterial(std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 0.3f) );
-			FiveSphere.AddMaterial(std::make_shared<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 1.0f) );
+		BuildMaterial();
+		BuildBaseSphere();
+		BuildRandomScene();
+	}
+	void BuildMaterial()
+	{
+		//0 - 4
+		m_Renderer.AddMaterial(std::make_shared<Lambertian>(glm::vec3(0.5f, 0.5f, 0.5f)));
+		m_Renderer.AddMaterial(std::make_shared<Lambertian>(glm::vec3(0.8f, 0.8f, 0.0f)));
+		m_Renderer.AddMaterial(std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 0.0f));
+		m_Renderer.AddMaterial(std::make_shared<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 1.0f));
+		m_Renderer.AddMaterial(std::make_shared<Dielectric>(1.5f));
 
-			FiveSphere.AddMaterial(std::make_shared<Dielectric>(1.5f) );
-		}	
-		{	
-			FiveSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -1.0f), 0.5f, 0));
-			FiveSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 100.5f, -1.0f), 100.0f, 1));
-			FiveSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(1.0f, 0.0f, -1.0f), 0.5f, 2));
-			FiveSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(-1.0f, 0.0f, 1.0f), 0.5f, 4));
-			FiveSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(-1.0f, 0.0f, 1.0f), -0.45f, 4));
+		//5 - 14
+		for (int i = 0; i < 10; i++)
+		{
+			auto albedo = Toffee::Random::Vec3();
+			m_Renderer.AddMaterial(std::make_shared<Lambertian>(albedo));
 		}
 
+		//15 - 24
+		for (int i = 0; i < 10; i++)
 		{
-			RandomSphere.AddMaterial(std::make_shared<Lambertian>(glm::vec3(0.5f, 0.5f, 0.5f)));
-			RandomSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 1000.0f, 0.0f), 999.0, 0));
-			RandomSphere.AddMaterial(std::make_shared<Dielectric>(1.5f));
+			auto albedo = Toffee::Random::Vec3(0.5f, 1.0f);
+			auto roughness = Toffee::Random::Float() * 0.5;
+			m_Renderer.AddMaterial(std::make_shared<Metal>(albedo, roughness));
+		}
+	}
 
-			int materialIndex = 1;
+	void BuildBaseSphere()
+	{
+		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -1.0f), 0.5f, 1));
+		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 100.5f, -1.0f), 100.0f, 0));
+		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(1.0f, 0.0f, -1.0f), 0.5f, 2));
+		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(1.0f, 0.0f, 1.0f), 0.5f, 3));
+		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(-1.0f, 0.0f, 1.0f), 0.5f, 4));
+		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(-1.0f, 0.0f, 1.0f), -0.45f, 4));
+	
+		BVHBaseSphere = BVHNode(BaseSphere, 0, 1);
+	}
 
-			for (int a = -11; a < 11; a++)
+	void BuildRandomScene()
+	{
+		for (int a = -11; a < 11; a++)
+		{
+			for (int b = -11; b < 11; b++)
 			{
-				for (int b = -11; b < 11; b++) 
+				float chooseMarerial = Toffee::Random::Float();
+				glm::vec3 center(a + 0.9f * Toffee::Random::Float(), 0.2f, b + 0.9 * Toffee::Random::Float());
+				if ((center - glm::vec3(4.0f, 0.2f, 0.0f)).length() > 0.9f)
 				{
-					float chooseMarerial = Toffee::Random::Float();
-					glm::vec3 center(a + 0.9f * Toffee::Random::Float(), 0.2f, b + 0.9 * Toffee::Random::Float());
-					if ((center - glm::vec3(4.0f, 0.2f, 0.0f)).length() > 0.9f)
+					if (chooseMarerial < 0.8f)//diffuse
 					{
-						if (chooseMarerial < 0.8f)//diffuse
-						{
-							auto albedo = Toffee::Random::Vec3();
-							RandomSphere.AddMaterial(std::make_shared<Lambertian>(albedo));
-							materialIndex++;
-							RandomSphere.AddSceneObject(std::make_shared<Sphere>(center, 0.2f, materialIndex));
-						}
-						else if (chooseMarerial < 0.95f)//Metal
-						{
-							auto albedo = Toffee::Random::Vec3(0.5f, 1.0f);
-							auto roughness = Toffee::Random::Float() * 0.5;
-							RandomSphere.AddMaterial(std::make_shared<Metal>(albedo, roughness));
-							materialIndex++;
-							RandomSphere.AddSceneObject(std::make_shared<Sphere>(center, 0.3f, materialIndex));
-						}
-						else
-						{
-							RandomSphere.AddSceneObject(std::make_shared<Sphere>(center, 0.4f, 1));
-						}
+						int materialIndex = Toffee::Random::UInt(3, 12);
+						RandomSphere.AddSceneObject(std::make_shared<Sphere>(center, 0.2f, materialIndex));
+					}
+					else if (chooseMarerial < 0.95f)//Metal
+					{
+						int materialIndex = Toffee::Random::UInt(13, 22);
+						RandomSphere.AddSceneObject(std::make_shared<Sphere>(center, 0.3f, materialIndex));
+					}
+					else
+					{
+						RandomSphere.AddSceneObject(std::make_shared<Sphere>(center, 0.4f, 2));
 					}
 				}
 			}
 		}
 
+		RandomSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 1000.0f, 0.0f), 1000.0, 0));
 
+		RandomSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 1.0f, 0.0f), 1.0f, 2)); //Dielectric
+		RandomSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(-4.0f, 1.0f, 0.0f), 1.0f, 1)); //Metal
+		RandomSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(-4.0f, 1.0f, 0.0f), 1.0f, 3)); //Lambertian
+
+		BVHRandomSphere = BVHNode(RandomSphere, 0, RandomSphere.GetSceneObjectSize());
 	}
 
 	virtual void OnUpdate(float ts) override
@@ -91,14 +111,17 @@ public:
 		ImGui::DragFloat3("Light Dir", glm::value_ptr(m_Renderer.m_LightDir), 0.01f);
 		ImGui::InputInt("Bounces", &m_Renderer.m_Bounces);
 		ImGui::Checkbox("Accumulate", &m_Renderer.Accumulate);
+		ImGui::SameLine();
+		ImGui::Checkbox("BVH", &BVH);
 
 		if (ImGui::Button("Reset"))
 		{
 			m_Renderer.ResetFrameIndex();
 		}
-		if (ImGui::Button("FiveSphere"))
+
+		if (ImGui::Button("BaseSphere"))
 		{
-			CurrentScene = FiveSphereScene;
+			CurrentScene = BaseSphereScene;
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("RandomSphere"))
@@ -106,21 +129,24 @@ public:
 			CurrentScene = RandomSphereScene;
 		}
 
+		ImGui::DragFloat3("Camera Position", glm::value_ptr(m_Camera.GetPosition()));
+
+
 		ImGui::End();
 
 		if (CurrentScene != RandomSphereScene)
 		{
 			ImGui::Begin("Scene");
 
-			for (int i = 0; i < FiveSphere.GetSceneObjectSize(); i++)
+			for (int i = 0; i < BaseSphere.GetSceneObjectSize(); i++)
 			{
 				ImGui::PushID(i);
 
-				std::shared_ptr<Sphere> sphere = std::dynamic_pointer_cast<Sphere>(FiveSphere.GetSceneObject(i));
+				std::shared_ptr<Sphere> sphere = std::dynamic_pointer_cast<Sphere>(BaseSphere.GetSceneObject(i));
 
 				ImGui::DragFloat3("Position", glm::value_ptr(sphere->GetPosition()), 0.01f);
 				ImGui::DragFloat("Radius", &(sphere->GetRadius()), 0.01f);
-				ImGui::SliderInt("Material Index", &sphere->GetMaterialIndex(), 0, (int)FiveSphere.GetMaterialSize());
+				ImGui::SliderInt("Material Index", &sphere->GetMaterialIndex(), 0, (int)m_Renderer.GetMaterialSize());
 				ImGui::Separator();
 
 				ImGui::PopID();
@@ -159,17 +185,23 @@ public:
 
 		switch (CurrentScene)
 		{
-			case FiveSphereScene:
+			case BaseSphereScene:
 			{
-				m_Renderer.Render(FiveSphere, m_Camera);
+				if(BVH)
+					m_Renderer.Render(BVHBaseSphere, m_Camera);
+				else
+					m_Renderer.Render(BaseSphere, m_Camera);
 				break;
 			}
 			case RandomSphereScene:
 			{
-				m_Renderer.Render(RandomSphere, m_Camera);
+				if(BVH)
+					m_Renderer.Render(BVHRandomSphere, m_Camera);
+				else
+					m_Renderer.Render(RandomSphere, m_Camera);
 				break;
 			}
-			default: m_Renderer.Render(FiveSphere, m_Camera); break;
+			default: m_Renderer.Render(BVHBaseSphere, m_Camera); break;
 		}
 
 		m_LastRenderTime = timer.ElapsedMillis();
@@ -177,7 +209,7 @@ public:
 
 private:
 	enum SceneClass{
-		FiveSphereScene = 0,
+		BaseSphereScene = 0,
 		RandomSphereScene = 1
 	};
 
@@ -189,8 +221,12 @@ private:
 	Camera m_Camera;
 
 	SceneClass CurrentScene;
-	Scene FiveSphere;
+	Scene BaseSphere;
 	Scene RandomSphere;
+	BVHNode BVHBaseSphere;
+	BVHNode BVHRandomSphere;
+
+	bool BVH = true;
 
 	float m_LastRenderTime = 0.0f;
 

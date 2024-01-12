@@ -16,8 +16,8 @@ public:
 	const glm::mat4& GetView() const { return m_View; }
 	const glm::mat4& GetInverseView() const { return m_InverseView; }
 
-	const glm::vec3& GetPosition() const { return m_Position; }
-	const glm::vec3& GetDirection() const { return m_ForwardDirection; }
+	glm::vec3& GetPosition() { return m_Position; }
+	glm::vec3& GetDirection() { return m_ForwardDirection; }
 
 	const std::vector<glm::vec3>& GetRayDirections() const { return m_RayDirections; }
 
