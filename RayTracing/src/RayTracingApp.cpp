@@ -22,25 +22,33 @@ public:
 	}
 	void BuildMaterial()
 	{
+		auto whiteColor = std::make_shared<ConstantTexture>(glm::vec3(0.1f, 0.1f, 0.1f));
+		auto blackColor = std::make_shared<ConstantTexture>(glm::vec3(0.9f, 0.9f, 0.9f));
+		auto constColor = std::make_shared<ConstantTexture>(glm::vec3(0.9f, 0.1f, 0.1f));
+
+		auto tt = std::make_shared<ImageTexture>("assets/textures/Checkerboard.png");
+
+		auto checkerboard = std::make_shared<CheckerBoardTexture>(whiteColor, blackColor);
 		//0 - 4
-		m_Renderer.AddMaterial(std::make_shared<Lambertian>(glm::vec3(0.5f, 0.5f, 0.5f)));
-		m_Renderer.AddMaterial(std::make_shared<Lambertian>(glm::vec3(0.8f, 0.8f, 0.0f)));
+		m_Renderer.AddMaterial(std::make_shared<Lambertian>(tt));
+		m_Renderer.AddMaterial(std::make_shared<Lambertian>(constColor  ));
 		m_Renderer.AddMaterial(std::make_shared<Metal>(glm::vec3(0.8f, 0.6f, 0.2f), 0.0f));
-		m_Renderer.AddMaterial(std::make_shared<Metal>(glm::vec3(0.8f, 0.8f, 0.8f), 1.0f));
+		m_Renderer.AddMaterial(std::make_shared<Metal>(glm::vec3(0.5f, 0.8f, 0.5f), 1.0f));
 		m_Renderer.AddMaterial(std::make_shared<Dielectric>(1.5f));
 
 		//5 - 14
 		for (int i = 0; i < 10; i++)
 		{
 			auto albedo = Toffee::Random::Vec3();
-			m_Renderer.AddMaterial(std::make_shared<Lambertian>(albedo));
+			auto texture = std::make_shared<ConstantTexture>(albedo);
+			m_Renderer.AddMaterial(std::make_shared<Lambertian>(texture));
 		}
 
 		//15 - 24
 		for (int i = 0; i < 10; i++)
 		{
 			auto albedo = Toffee::Random::Vec3(0.5f, 1.0f);
-			auto roughness = Toffee::Random::Float() * 0.5;
+			auto roughness = Toffee::Random::Float() * 0.5f;
 			m_Renderer.AddMaterial(std::make_shared<Metal>(albedo, roughness));
 		}
 	}
@@ -85,7 +93,7 @@ public:
 			}
 		}
 
-		RandomSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 1000.0f, 0.0f), 1000.0, 0));
+		RandomSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 1000.0f, 0.0f), 999.0f, 0));
 
 		RandomSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 1.0f, 0.0f), 1.0f, 2)); //Dielectric
 		RandomSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(-4.0f, 1.0f, 0.0f), 1.0f, 1)); //Metal

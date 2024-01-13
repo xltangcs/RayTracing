@@ -5,7 +5,11 @@ project "RayTracing"
    targetdir "bin/%{cfg.buildcfg}"
    staticruntime "off"
 
-   files { "src/**.h", "src/**.cpp" }
+   files 
+   {
+      "src/**.h", 
+      "src/**.cpp",
+   }
 
    includedirs
    {
@@ -16,6 +20,7 @@ project "RayTracing"
 
       "%{IncludeDir.VulkanSDK}",
       "%{IncludeDir.glm}",
+      "%{IncludeDir.stb_image}",
    }
 
     links

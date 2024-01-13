@@ -1,5 +1,7 @@
 #include "SceneObject.h"
 
+#include <glm/gtc/constants.hpp>
+
 AABB::AABB(const glm::vec3& minbound, const glm::vec3& maxbound)
 	:MaxBound(maxbound), MinBound(minbound)
 {
@@ -49,12 +51,12 @@ bool Sphere::Hit(const Ray& ray, float t_min, float t_max, HitPayload& payload) 
 		payload.FrontFace = glm::dot(ray.Direction, normal) < 0;
 		payload.WorldNormal = payload.FrontFace ? normal : -normal;
 		payload.MaterialIndex = m_MaterialIndex;
+		GetUV(normal, payload.UV);
 
 		//glm::vec3 origin = ray.Origin - m_Position;
 		//payload.WorldPosition = origin + ray.Direction * t0;
 		//payload.WorldNormal = glm::normalize(payload.WorldPosition); //normal
 		//payload.MaterialIndex = m_MaterialIndex;
-
 
 		return true;
 	}
@@ -69,6 +71,8 @@ bool Sphere::Hit(const Ray& ray, float t_min, float t_max, HitPayload& payload) 
 		payload.FrontFace = glm::dot(ray.Direction, normal) < 0;
 		payload.WorldNormal = payload.FrontFace ? normal : -normal;
 		payload.MaterialIndex = m_MaterialIndex;
+		GetUV(normal, payload.UV);
+
 		return true;
 	}
 
@@ -79,4 +83,13 @@ bool Sphere::BoundingBox(float t0, float t1, AABB& output_box) const
 {
 	output_box = AABB( m_Position - glm::vec3(m_Radius), m_Position + glm::vec3(m_Radius) );
 	return true;
+}
+
+void Sphere::GetUV(const glm::vec3& pos, glm::vec2& uv)
+{
+	auto theta = acos(-pos.y);
+	auto phi = atan2(-pos.z, pos.x) + glm::pi<float>();
+
+	uv.x = phi / (2 * glm::pi<float>());
+	uv.y = theta / glm::pi<float>();
 }

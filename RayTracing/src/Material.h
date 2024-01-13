@@ -7,6 +7,7 @@
 #include "Toffee/Random.h"
 
 #include "Ray.h"
+#include "Texture.h"
 #include "HitPayload.h"
 
 class Material {
@@ -16,12 +17,12 @@ public:
 
 class Lambertian : public Material {
 public:
-    Lambertian(const glm::vec3& albedo);
+    Lambertian(std::shared_ptr<Texture> albedo);
 
     virtual bool Scatter(const Ray& rayIn, const HitPayload& payload, glm::vec3& attenuation, Ray& scattered) const;
 
 private:
-    glm::vec3 m_Albedo;
+    std::shared_ptr<Texture> m_Albedo;
 };
 
 class Metal : public Material {

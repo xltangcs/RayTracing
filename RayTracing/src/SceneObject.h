@@ -38,7 +38,8 @@ public:
 	glm::vec3& GetPosition() { return m_Position; }
 	float& GetRadius() { return m_Radius; }
 	int& GetMaterialIndex() { return m_MaterialIndex; }
-
+private:
+	static void GetUV(const glm::vec3& pos, glm::vec2& uv);
 private:
     glm::vec3 m_Position;
     float m_Radius;

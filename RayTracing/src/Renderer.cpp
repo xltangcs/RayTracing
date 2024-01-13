@@ -47,7 +47,7 @@ void Renderer::Render(SceneObject& scene, Camera& camera)
 	m_ActiveScene = &scene;
 
 	if (m_FrameIndex == 1)
-		memset(m_AccumulationData, 0, m_FinalImage->GetWidth() * m_FinalImage->GetHeight() * sizeof(glm::vec3));
+		memset(m_AccumulationData, 0, (size_t)m_FinalImage->GetWidth() * m_FinalImage->GetHeight() * sizeof(glm::vec3));
 #define MT 0
 #ifdef  MT
 	std::for_each(std::execution::par, m_ImageVerticalIter.begin(), m_ImageVerticalIter.end(),

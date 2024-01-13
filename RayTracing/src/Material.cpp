@@ -1,6 +1,6 @@
 #include "Material.h"
 
-Lambertian::Lambertian(const glm::vec3& albedo)
+Lambertian::Lambertian(std::shared_ptr<Texture> albedo)
 	:m_Albedo(albedo)
 {
 }
@@ -9,7 +9,7 @@ bool Lambertian::Scatter(const Ray& rayIn, const HitPayload& payload, glm::vec3&
 {
 	glm::vec3 scatter_direction = payload.WorldNormal + Toffee::Random::InUnitSphere();
 	scattered = Ray(payload.WorldPosition, scatter_direction);
-	attenuation = m_Albedo;
+	attenuation = m_Albedo->GetColor(payload.UV, payload.WorldPosition);
 	return true;
 }
 

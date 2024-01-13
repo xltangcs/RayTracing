@@ -9,6 +9,7 @@ struct HitPayload
 	glm::vec3 WorldPosition;
 	glm::vec3 WorldNormal;
 
+	glm::vec2 UV;
 	int MaterialIndex;
 
 	bool FrontFace;
