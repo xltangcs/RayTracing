@@ -5,8 +5,7 @@
 
 #include <glm/glm.hpp>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include "Toffee/Image.h"
 
 class Texture
 {
@@ -48,16 +47,11 @@ public:
 
 	virtual glm::vec3 GetColor(glm::vec2 uv, const glm::vec3& p) const;
 
-	void LoadImage(const std::string& path);
-	const unsigned char* PixelData(int x, int y) const;
-
-	uint32_t& GetWidth() { return m_ImageWidth; }
-	uint32_t& GetHeight() { return m_ImageHeight; }
-
+	uint32_t& GetWidth() { return m_Image.GetWidth(); }
+	uint32_t& GetHeight() { return m_Image.GetHeight(); }
+	int& GetChannel() const { return m_Image.GetChannel(); }
 
 private:
 	std::string m_FilePath;
-	unsigned char* m_ImageData = nullptr;
-	uint32_t m_ImageWidth, m_ImageHeight;
-	int m_nrComponents;
+	Toffee::ImageForTexture m_Image;
 };

@@ -17,8 +17,7 @@ class Renderer
 {
 public:
 	bool Accumulate = true;
-
-	glm::vec3 m_LightDir = { -1.0f, 0.5f, -1.0f };
+	bool SourceLight = false;
 	int m_Bounces = 5;
 public:
 	Renderer() = default;
@@ -35,7 +34,7 @@ public:
 
 	void ResetFrameIndex() { m_FrameIndex = 1; }
 private:
-	glm::vec3 Renderer::ray_color(const Ray& ray, int depth);
+	glm::vec3 Renderer::ray_color(Ray& ray);
 private:
 	std::shared_ptr<Toffee::Image> m_FinalImage;
 

@@ -15,12 +15,12 @@ project "RayTracing"
    {
       "../vendor/imgui",
       "../vendor/glfw/include",
+      "../vendor/stb_image",
 
       "../Toffee/src",
 
       "%{IncludeDir.VulkanSDK}",
       "%{IncludeDir.glm}",
-      "%{IncludeDir.stb_image}",
    }
 
     links

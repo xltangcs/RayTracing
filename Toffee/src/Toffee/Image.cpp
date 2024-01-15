@@ -1,5 +1,7 @@
 #include "Image.h"
 
+#include <iostream>
+
 #include "imgui.h"
 #include "backends/imgui_impl_vulkan.h"
 
@@ -66,6 +68,7 @@ namespace Toffee {
 
 		m_Width = width;
 		m_Height = height;
+		m_Data = data;
 		
 		AllocateMemory(m_Width * m_Height * Utils::BytesPerPixel(m_Format));
 		SetData(data);
@@ -274,6 +277,18 @@ namespace Toffee {
 		}
 	}
 
+	const unsigned char* Image::PixelData(int x, int y) const
+	{
+		static unsigned char magenta[] = { 255, 0, 255 };
+
+		if (m_Data == nullptr) return magenta;
+
+		x = glm::clamp(x, 0, (int)m_Width);
+		y = glm::clamp(y, 0, (int)m_Height);
+
+		return m_Data + y * Utils::BytesPerPixel(m_Format) * m_Width + x * Utils::BytesPerPixel(m_Format);
+	}
+
 	void Image::Resize(uint32_t width, uint32_t height)
 	{
 		if (m_Image && m_Width == width && m_Height == height)
@@ -286,6 +301,36 @@ namespace Toffee {
 
 		Release();
 		AllocateMemory(m_Width * m_Height * Utils::BytesPerPixel(m_Format));
+	}
+
+	ImageForTexture::ImageForTexture(std::string path)
+		:m_FilePath(path)
+	{
+		int width, height, nrComponents;
+		unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
+		if (data)
+		{
+			m_Width = width;
+			m_Height = height;
+			m_Channel = nrComponents;
+			m_ImageData = data;
+
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Texture failed to load at path: " << path << "\n";
+			stbi_image_free(data);
+		}
+
+	}
+
+	glm::vec3 ImageForTexture::PixelData(int x, int y) const
+	{
+		auto r = static_cast<float>(m_ImageData[3 * x + 3 * m_Width * y + 0]) / 255.0;
+		auto g = static_cast<float>(m_ImageData[3 * x + 3 * m_Width * y + 1]) / 255.0;
+		auto b = static_cast<float>(m_ImageData[3 * x + 3 * m_Width * y + 2]) / 255.0;
+		return glm::vec3(r, g, b);
 	}
 
 }

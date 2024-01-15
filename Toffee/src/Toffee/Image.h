@@ -4,6 +4,8 @@
 
 #include "vulkan/vulkan.h"
 
+#include "glm/glm.hpp"
+
 namespace Toffee {
 
 	enum class ImageFormat
@@ -21,18 +23,21 @@ namespace Toffee {
 		~Image();
 
 		void SetData(const void* data);
+		const unsigned char* PixelData(int x, int y) const;
 
 		VkDescriptorSet GetDescriptorSet() const { return m_DescriptorSet; }
 
 		void Resize(uint32_t width, uint32_t height);
 
-		uint32_t GetWidth() const { return m_Width; }
-		uint32_t GetHeight() const { return m_Height; }
+		uint32_t& GetWidth() const  { return m_Width; }
+		uint32_t& GetHeight() const { return m_Height; }
+
 	private:
 		void AllocateMemory(uint64_t size);
 		void Release();
 	private:
-		uint32_t m_Width = 0, m_Height = 0;
+		mutable uint32_t m_Width = 0, m_Height = 0;
+		uint8_t* m_Data = nullptr;
 
 		VkImage m_Image = nullptr;
 		VkImageView m_ImageView = nullptr;
@@ -49,6 +54,25 @@ namespace Toffee {
 		VkDescriptorSet m_DescriptorSet = nullptr;
 
 		std::string m_Filepath;
+	};
+
+	class ImageForTexture
+	{
+	public:
+		uint8_t* m_ImageData = nullptr;
+	public:
+		ImageForTexture(std::string path);
+
+		glm::vec3 PixelData(int x, int y) const;
+
+		uint32_t& GetWidth() const { return m_Width; }
+		uint32_t& GetHeight() const { return m_Height; }
+		int& GetChannel() const { return m_Channel; }
+	private:
+		std::string m_FilePath;
+		mutable uint32_t m_Width = 0, m_Height = 0;
+		//uint8_t* m_ImageData = nullptr;
+		mutable int m_Channel = 0;
 	};
 
 }

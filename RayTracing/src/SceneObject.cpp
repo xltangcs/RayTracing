@@ -24,10 +24,31 @@ bool AABB::Hit(const Ray& ray, float tmin, float tmax) const
 	return true;
 }
 
+void AABB::Padding()
+{
+	float delta = 0.001f;
+	for (int i = 0; i < 3; i++)
+	{
+		if (std::fabs(MaxBound[i] - MinBound[i]) < delta)
+		{
+			MaxBound[i] += delta / 2.0f;
+			MinBound[i] -= delta / 2.0f;
+		}
+	}
+}
+
+
+Sphere::Sphere()
+{
+	m_Type = "Sphere";
+	m_MaterialIndex = 0;
+}
 
 Sphere::Sphere(glm::vec3 pos, float r, int materialIndex)
-	:m_Position(pos), m_Radius(r), m_MaterialIndex(materialIndex)
+	:m_Position(pos), m_Radius(r)
 {
+	m_Type = "Sphere";
+	m_MaterialIndex = materialIndex;
 }
 
 bool Sphere::Hit(const Ray& ray, float t_min, float t_max, HitPayload& payload) const
@@ -89,7 +110,76 @@ void Sphere::GetUV(const glm::vec3& pos, glm::vec2& uv)
 {
 	auto theta = acos(-pos.y);
 	auto phi = atan2(-pos.z, pos.x) + glm::pi<float>();
-
 	uv.x = phi / (2 * glm::pi<float>());
 	uv.y = theta / glm::pi<float>();
+
+	//auto phi = atan2(pos.z, pos.x);
+	//auto theta = asin(pos.y);
+	//uv.x = 1.0f - (phi + glm::pi<float>()) / (2.0f * glm::pi<float>());
+	//uv.y = (theta + glm::pi<float>() / 2.0f) / glm::pi<float>();
+
 }
+
+Quad::Quad()
+{
+	m_Type = "Quad";
+	m_MaterialIndex = 0;
+}
+
+Quad::Quad(glm::vec3 pos, glm::vec3 udir, glm::vec3 vdir, int materialIndex)
+	:m_Position(pos), m_UDirection(udir), m_VDirection(vdir)
+{
+	m_Type = "Quad";
+	m_MaterialIndex = materialIndex;
+}
+
+bool Quad::Hit(const Ray& ray, float t_min, float t_max, HitPayload& payload) const
+{
+	auto normal = glm::cross(m_UDirection, m_VDirection);
+	normal = glm::normalize(normal);
+
+	auto d = glm::dot(normal, m_Position);
+	auto w = normal / glm::dot(normal, normal);
+	auto denom = glm::dot(normal, ray.Direction);
+
+	if (fabs(denom) < 1e-8)
+	{
+		return false;
+	}
+
+	auto t = (d - glm::dot(normal, ray.Origin)) / denom;
+	if (t < t_min || t > t_max) return false;
+
+	glm::vec3 hitpos = ray.Origin + t * ray.Direction;
+	glm::vec3 plannarvector = hitpos - m_Position;
+	float alpha = glm::dot(w, glm::cross(plannarvector, m_VDirection));
+	float beta  = glm::dot(w, glm::cross(m_UDirection, plannarvector));
+
+	if (!GetUV(alpha, beta, payload.UV)) return false;
+
+	payload.HitDistance = t;
+	payload.WorldPosition = ray.Origin + t * ray.Direction;
+	payload.MaterialIndex = m_MaterialIndex;
+	payload.FrontFace = glm::dot(ray.Direction, normal) < 0;
+	payload.WorldNormal = payload.FrontFace ? normal : -normal;
+
+	return true;
+}
+
+bool Quad::BoundingBox(float t0, float t1, AABB& output_box) const
+{
+	output_box = AABB(m_Position, m_Position + m_UDirection + m_VDirection);
+	output_box.Padding();
+	return true;
+}
+
+bool Quad::GetUV(float a, float b, glm::vec2& uv)
+{
+	if ((a < 0.0f) || (1.0f < a) || (b < 0.0f) || (1.0f < b))
+		return false;
+
+	uv.x = a;
+	uv.y = b;
+	return true;
+}
+
