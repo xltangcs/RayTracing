@@ -14,7 +14,7 @@ class ExampleLayer : public Toffee::Layer
 {
 public:
 	ExampleLayer()
-		:m_Camera(45.0f, 0.1f, 100.0f), CurrentScene(NextWeekScene), BVH(false)
+		:m_Camera(45.0f, 0.1f, 100.0f), CurrentScene(NextWeekScene), BVH(true)
 	{
 		BuildMaterial();
 		BuildBaseSphere();
@@ -29,7 +29,7 @@ public:
 		auto redColor = std::make_shared<ConstantTexture>(glm::vec3(0.6f, 0.01f, 0.01f));
 		auto yellowColor = std::make_shared<ConstantTexture>(glm::vec3(0.9f, 0.9f, 0.1f));
 		auto greenColor = std::make_shared<ConstantTexture>(glm::vec3(0.2f, 0.5f, 0.3f));
-		auto lightColor = std::make_shared<ConstantTexture>(glm::vec3(1.0f, 1.0f, 1.0f));
+		auto lightColor = std::make_shared<ConstantTexture>(glm::vec3(15.0f, 15.0f, 15.0f));
 
 		auto image = std::make_shared<ImageTexture>("assets/textures/Checkerboard.png");
 
@@ -70,7 +70,7 @@ public:
 			m_Renderer.AddMaterial(material);
 		}
 		{ //28
-			auto material = std::make_shared<Lambertian>(yellowColor);
+			auto material = std::make_shared<Lambertian>(whiteColor);
 			m_Renderer.AddMaterial(material);
 		}
 	}
@@ -78,7 +78,7 @@ public:
 	void BuildBaseSphere()
 	{
 		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -1.0f), 0.5f, 1));
-		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 100.5f, -1.0f), 100.0f, 0));
+		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -1.0f), 100.0f, 0));
 		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(1.0f, 0.0f, -1.0f), 0.5f, 2));
 		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(1.0f, 0.0f, 1.0f), 0.5f, 3));
 		BaseSphere.AddSceneObject(std::make_shared<Sphere>(glm::vec3(-1.0f, 0.0f, 1.0f), 0.5f, 4));
@@ -88,7 +88,7 @@ public:
 		auto quad = std::make_shared<Quad>(glm::vec3(1.0f, 1.0f, 1.0f),
 			glm::vec3(4.0f, 0.0f, 0.0f),
 			glm::vec3(0.0f, 4.0f, 0.0f),
-			24);
+			25);
 		BaseSphere.AddSceneObject(quad);
 
 		BVHBaseSphere = BVHNode(BaseSphere, 0, 1);
@@ -133,10 +133,45 @@ public:
 
 	void BuildNextWeekScene()
 	{
+		{ //light
+			auto quad = std::make_shared<Quad>(glm::vec3(-1.0f, 2.8f, 1.0f),
+				glm::vec3(0.0f, 0.0f, 2.0f),
+				glm::vec3(2.0f, 0.0f, 0.0f),
+				25);
+			NextWeek.AddSceneObject(quad);
+		}
+		{ //right
+			auto quad = std::make_shared<Quad>(glm::vec3(3.0f, -5.0f, -2.0f),
+				glm::vec3(0.0f, 10.0f, 0.0f),
+				glm::vec3(0.0f, 0.0f, 10.0f),
+				26);
+			NextWeek.AddSceneObject(quad);
+		}
+		{ //left
+			auto quad = std::make_shared<Quad>(glm::vec3(-3.0f, -5.0f, -2.0f),
+				glm::vec3(0.0f, 10.0f, 0.0f),
+				glm::vec3(0.0f, 0.0f, 10.0f),
+				27);
+			NextWeek.AddSceneObject(quad);
+		}
+		{ //up
+			auto quad = std::make_shared<Quad>(glm::vec3(-5.0f, 3.0f, -5.0f),
+				glm::vec3(0.0f, 0.0f, 10.0f),
+				glm::vec3(10.0f, 0.0f, 0.0f),
+				28);
+			NextWeek.AddSceneObject(quad);
+		}
+		{ //down
+			auto quad = std::make_shared<Quad>(glm::vec3(-5.0f, -3.0f, -5.0f),
+				glm::vec3(0.0f, 0.0f, 10.0f),
+				glm::vec3(10.0f, 0.0f, 0.0f),
+				28);
+			NextWeek.AddSceneObject(quad);
+		}
 		{ //center
-			auto quad = std::make_shared<Quad>(glm::vec3(-10.0f, -10.0f, -10.0f),
-				glm::vec3(0.01f, 0.0f, 0.0f),
-				glm::vec3(0.0f, 0.01f, 0.0f),
+			auto quad = std::make_shared<Quad>(glm::vec3(-5.0f, -5.0f, 0.0f),
+				glm::vec3(10.0f, 0.0f, 0.0f),
+				glm::vec3(0.0f, 10.0f, 0.0f),
 				28);
 			NextWeek.AddSceneObject(quad);
 		}
@@ -170,7 +205,21 @@ public:
 		{
 			m_Renderer.ResetFrameIndex();
 		}
-
+		ImGui::SameLine();
+		if (ImGui::Button("Add Quad"))
+		{
+			auto quad = std::make_shared<Quad>(glm::vec3(0.0f, 0.0f, 0.0f),
+				glm::vec3(4.0f, 0.0f, 0.0f),
+				glm::vec3(0.0f, 4.0f, 0.0f),
+				28);
+			NextWeek.AddSceneObject(quad);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Add Sphere"))
+		{
+			NextWeek.AddSceneObject(std::make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -1.0f), 0.5f, 1));
+		}
+		
 		if (ImGui::Button("BaseSphere"))
 		{
 			CurrentScene = BaseSphereScene;
@@ -187,38 +236,37 @@ public:
 		}
 
 		ImGui::DragFloat3("Camera Position", glm::value_ptr(m_Camera.GetPosition()));
-
+		ImGui::Checkbox("Camera Rotation", &m_Camera.GetIsRotation());
 
 		ImGui::End();
 
-		if (CurrentScene == BaseSphereScene)
+
+		if (CurrentScene != RandomSphereScene)
 		{
 			ImGui::Begin("Scene");
-			for (int i = 0; i < BaseSphere.GetSceneObjectSize(); i++)
+			int SceneObjectSize = 0;
+			if (CurrentScene == NextWeekScene)
 			{
-				ImGui::PushID(i);
-				auto obj = BaseSphere.GetSceneObject(i);
-				std::shared_ptr<Sphere> sphere = std::dynamic_pointer_cast<Sphere>(obj);
-				ImGui::DragFloat3("Position", glm::value_ptr(sphere->GetPosition()), 0.01f);
-				ImGui::DragFloat("Radius", &(sphere->GetRadius()), 0.01f);
-				ImGui::SliderInt("Material Index", &sphere->m_MaterialIndex, 0, (int)m_Renderer.GetMaterialSize());
-
-				ImGui::Separator();
-
-				ImGui::PopID();
+				SceneObjectSize = NextWeek.GetSceneObjectSize();
 			}
-			ImGui::End();
-		}
+			else
+			{
+				SceneObjectSize = BaseSphere.GetSceneObjectSize();
+			}
 
-		if (CurrentScene == NextWeekScene)
-		{
-			ImGui::Begin("Scene");
-
-			for (int i = 0; i < NextWeek.GetSceneObjectSize(); i++)
+			for (int i = 0; i < SceneObjectSize; i++)
 			{
 				ImGui::PushID(i);
 
-				auto obj = NextWeek.GetSceneObject(i);
+				std::shared_ptr<SceneObject> obj = nullptr;
+				if (CurrentScene == NextWeekScene)
+				{
+					obj = NextWeek.GetSceneObject(i);
+				}
+				else
+				{
+					obj = BaseSphere.GetSceneObject(i);
+				}
 
 				if (obj->m_Type == "Sphere")
 				{
@@ -233,7 +281,7 @@ public:
 					ImGui::DragFloat3("Position", glm::value_ptr(quad->GetPosition()), 0.01f);
 					ImGui::DragFloat3("U Vector", glm::value_ptr(quad->GetUDirection()), 0.01f);
 					ImGui::DragFloat3("V Vector", glm::value_ptr(quad->GetVDirection()), 0.01f);
-	
+					ImGui::SliderInt("Material Index", &quad->m_MaterialIndex, 0, (int)m_Renderer.GetMaterialSize());
 				}
 				ImGui::Separator();
 

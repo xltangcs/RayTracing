@@ -11,7 +11,7 @@ using namespace Toffee;
 Camera::Camera(float verticalFOV, float nearClip, float farClip)
 	: m_VerticalFOV(verticalFOV), m_NearClip(nearClip), m_FarClip(farClip)
 {
-	m_ForwardDirection = glm::vec3(0, 0, 1);
+	m_ForwardDirection = glm::vec3(0, 0, -1);
 	m_Position = glm::vec3(0, 0, 9);
 }
 
@@ -69,16 +69,19 @@ bool Camera::OnUpdate(float ts)
 	}
 
 	// Rotation
-	if (delta.x != 0.0f || delta.y != 0.0f)
+	if (m_IsRotation)
 	{
-		float pitchDelta = delta.y * GetRotationSpeed();
-		float yawDelta = delta.x * GetRotationSpeed();
+		if (delta.x != 0.0f || delta.y != 0.0f)
+		{
+			float pitchDelta = delta.y * GetRotationSpeed();
+			float yawDelta = delta.x * GetRotationSpeed();
 
-		glm::quat q = glm::normalize(glm::cross(glm::angleAxis(-pitchDelta, rightDirection),
-			glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f))));
-		m_ForwardDirection = glm::rotate(q, m_ForwardDirection);
+			glm::quat q = glm::normalize(glm::cross(glm::angleAxis(-pitchDelta, rightDirection),
+				glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f))));
+			m_ForwardDirection = glm::rotate(q, m_ForwardDirection);
 
-		moved = true;
+			moved = true;
+		}
 	}
 
 	if (moved)
@@ -129,6 +132,7 @@ void Camera::RecalculateRayDirections()
 		{
 			glm::vec2 coord = { (float)x / (float)m_ViewportWidth, (float)y / (float)m_ViewportHeight };
 			coord = coord * 2.0f - 1.0f; // -1 -> 1
+			coord.y = -coord.y; //Flip y
 
 			glm::vec4 target = m_InverseProjection * glm::vec4(coord.x, coord.y, 1, 1);
 			glm::vec3 rayDirection = glm::vec3(m_InverseView * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0)); // World space

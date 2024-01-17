@@ -59,11 +59,12 @@ void Renderer::Render(SceneObject& scene, Camera& camera)
 					Ray ray(m_ActiveCamera->GetPosition(), m_ActiveCamera->GetRayDirections()[x + y * m_FinalImage->GetWidth()]);
 
 					glm::vec3 color = ray_color(ray);
+					//glm::vec3 color = ray_color(ray, m_Bounces);
 					m_AccumulationData[x + y * m_FinalImage->GetWidth()] += color;
 
 					glm::vec3 accumulatedColor = m_AccumulationData[x + y * m_FinalImage->GetWidth()];
 					accumulatedColor /= (float)m_FrameIndex;
-					accumulatedColor = glm::clamp(accumulatedColor, glm::vec3(0.0f), glm::vec3(1.0f));
+					//accumulatedColor = glm::clamp(accumulatedColor, glm::vec3(0.0f), glm::vec3(1.0f));
 					m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(glm::vec4(accumulatedColor, 1.0f));
 				});
 		});
@@ -107,51 +108,52 @@ std::shared_ptr<Material> Renderer::GetMaterial(int materialIndex)
 	}
 }
 
-//glm::vec3 Renderer::ray_color(const Ray& ray, int depth)
-//{
-//
-//	if (depth <= 0)
-//		return glm::vec3(0.0f, 0.0f, 0.0f);
-//
-//	HitPayload payload;
-//
-//	if (SourceLight)
-//	{
-//		if (m_ActiveScene->Hit(ray, 0.001f, std::numeric_limits<float>::max(), payload))
-//		{
-//			Ray outRay;
-//			glm::vec3 color;
-//
-//			if (GetMaterial(payload.MaterialIndex)->Scatter(ray, payload, color, outRay))
-//			{
-//				return color * ray_color(outRay, depth - 1);
-//			}
-//
-//			return glm::vec3(0.0f);
-//		}
-//
-//		glm::vec3 unit_direction = glm::normalize(ray.Direction);
-//		float t = 0.5f * (unit_direction.y + 1.0f);
-//		return glm::vec3(1.0f, 1.0f, 1.0f) * (1.0f - t) + t * glm::vec3(0.5f, 0.7f, 1.0f);
-//	}
-//	else
-//	{
-//		if (!m_ActiveScene->Hit(ray, 0.001f, std::numeric_limits<float>::max(), payload))
-//		{
-//			return glm::vec3(0.0f); //hit nothing
-//		}
-//		Ray outRay;
-//		glm::vec3 color;
-//		glm::vec3 emitColor = GetMaterial(payload.MaterialIndex)->Emitted(payload.UV, payload.WorldPosition);
-//
-//		if (GetMaterial(payload.MaterialIndex)->Scatter(ray, payload, color, outRay))
-//		{
-//			return emitColor;
-//		}
-//		
-//		return emitColor + color * ray_color(outRay, depth - 1);
-//	}
-//}
+glm::vec3 Renderer::ray_color(const Ray& ray, int depth)
+{
+
+	if (depth <= 0)
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+
+	HitPayload payload;
+
+	if (SourceLight)
+	{
+		if (m_ActiveScene->Hit(ray, 0.001f, std::numeric_limits<float>::max(), payload))
+		{
+			Ray outRay;
+			glm::vec3 color;
+
+			if (GetMaterial(payload.MaterialIndex)->Scatter(ray, payload, color, outRay))
+			{
+				return color * ray_color(outRay, depth - 1);
+			}
+
+			return glm::vec3(0.0f);
+		}
+
+		glm::vec3 unit_direction = glm::normalize(ray.Direction);
+		float t = 0.5f * (unit_direction.y + 1.0f);
+		return glm::vec3(1.0f, 1.0f, 1.0f) * (1.0f - t) + t * glm::vec3(0.5f, 0.7f, 1.0f);
+	}
+	else
+	{
+		if (!m_ActiveScene->Hit(ray, 0.001f, std::numeric_limits<float>::max(), payload))
+		{
+			return glm::vec3(0.0f); //hit nothing
+		}
+		Ray outRay;
+		glm::vec3 color;
+		glm::vec3 emitColor = GetMaterial(payload.MaterialIndex)->Emitted(payload.UV, payload.WorldPosition);
+
+		if (GetMaterial(payload.MaterialIndex)->Scatter(ray, payload, color, outRay))
+		{
+			return emitColor;
+		}
+		
+		return emitColor + color * ray_color(outRay, depth - 1);
+	}
+}
+
 
 glm::vec3 Renderer::ray_color(Ray& ray)
 {
@@ -162,18 +164,23 @@ glm::vec3 Renderer::ray_color(Ray& ray)
 
 	for (int i = 0; i < m_Bounces; i++)
 	{
-		glm::vec3 color(0.0f); 
-		Ray outRay;
-		glm::vec3 color_from_emission;
+		bool isHitScene = m_ActiveScene->Hit(ray, 0.0001f, std::numeric_limits<float>::max(), payload);
 
-		if (m_ActiveScene->Hit(ray, 0.001f, std::numeric_limits<float>::max(), payload)) //hit obj
+		if (isHitScene) //hit obj
 		{
+			glm::vec3 color(0.0f);
+			Ray outRay;
+			glm::vec3 color_from_emission = GetMaterial(payload.MaterialIndex)->Emitted(payload.UV, payload.WorldPosition);
+
 			if (!GetMaterial(payload.MaterialIndex)->Scatter(ray, payload, color, outRay))
 			{
-				color_from_emission = GetMaterial(payload.MaterialIndex)->Emitted(payload.UV, payload.WorldPosition);
 				finalColor *= color_from_emission;
-
 				break; //don't continue bounce
+			}
+			else
+			{
+				finalColor *= (color + color_from_emission);
+				ray = outRay;
 			}
 		}
 		else //hit sky
@@ -182,9 +189,6 @@ glm::vec3 Renderer::ray_color(Ray& ray)
 			else finalColor *= glm::vec3(0.0f);
 			break;
 		}
-
-		finalColor *= (color + color_from_emission);
-		ray = outRay;
 	}
 	return finalColor;
 }

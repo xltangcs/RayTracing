@@ -18,6 +18,7 @@ public:
 
 	glm::vec3& GetPosition() { return m_Position; }
 	glm::vec3& GetDirection() { return m_ForwardDirection; }
+	bool& GetIsRotation() { return m_IsRotation; }
 
 	const std::vector<glm::vec3>& GetRayDirections() const { return m_RayDirections; }
 
@@ -38,6 +39,7 @@ private:
 
 	glm::vec3 m_Position{ 0.0f, 0.0f, 0.0f };
 	glm::vec3 m_ForwardDirection{ 0.0f, 0.0f, 0.0f };
+	bool m_IsRotation = false;
 
 	// Cached ray directions
 	std::vector<glm::vec3> m_RayDirections;

@@ -35,6 +35,7 @@ public:
 	void ResetFrameIndex() { m_FrameIndex = 1; }
 private:
 	glm::vec3 Renderer::ray_color(Ray& ray);
+	glm::vec3 Renderer::ray_color(const Ray& ray, int depth);
 private:
 	std::shared_ptr<Toffee::Image> m_FinalImage;
 

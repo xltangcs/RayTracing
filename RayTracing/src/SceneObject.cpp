@@ -1,6 +1,9 @@
 #include "SceneObject.h"
 
 #include <glm/gtc/constants.hpp>
+#include <glm/gtx/intersect.hpp>
+
+//bool intersectRayTriangle(glm::vec3 orig, glm::vec3 orig, glm::vec3 orig, glm::vec3 orig, glm::vec3 orig, )
 
 AABB::AABB(const glm::vec3& minbound, const glm::vec3& maxbound)
 	:MaxBound(maxbound), MinBound(minbound)
@@ -135,10 +138,41 @@ Quad::Quad(glm::vec3 pos, glm::vec3 udir, glm::vec3 vdir, int materialIndex)
 
 bool Quad::Hit(const Ray& ray, float t_min, float t_max, HitPayload& payload) const
 {
-	auto normal = glm::cross(m_UDirection, m_VDirection);
-	normal = glm::normalize(normal);
+	glm::vec3 p1 = m_Position + m_UDirection;
+	glm::vec3 p2 = m_Position + m_VDirection;
+	glm::vec3 p3 = m_Position + m_UDirection + m_VDirection;
+	glm::vec2 baryPosition;
 
+	float t;
+	bool isHit = glm::intersectRayTriangle(ray.Origin, ray.Direction, m_Position, p1, p3, baryPosition, t);
+	if (!isHit)
+	{
+		isHit = glm::intersectRayTriangle(ray.Origin, ray.Direction, m_Position, p2, p3, baryPosition, t);
+		if (!isHit)
+		{
+			return false;
+		}
+	}
+
+	if (t < t_min || t > t_max) return false;
+
+	payload.HitDistance = t;
+	payload.WorldPosition = ray.Origin + t * ray.Direction;
+
+	glm::vec3 edge1 = m_Position - payload.WorldPosition;
+	glm::vec3 edge2 = p1 - payload.WorldPosition;
+	glm::vec3 normal = glm::normalize(glm::cross(edge1, edge2));
+
+	payload.FrontFace = glm::dot(normal, ray.Direction) < 0; 
+	payload.WorldNormal = payload.FrontFace ? normal : -normal;
+	payload.MaterialIndex = m_MaterialIndex;
+	payload.UV = baryPosition;
+
+	return true;
+/*
+	auto normal = glm::cross(m_UDirection, m_VDirection);
 	auto d = glm::dot(normal, m_Position);
+
 	auto w = normal / glm::dot(normal, normal);
 	auto denom = glm::dot(normal, ray.Direction);
 
@@ -164,6 +198,7 @@ bool Quad::Hit(const Ray& ray, float t_min, float t_max, HitPayload& payload) co
 	payload.WorldNormal = payload.FrontFace ? normal : -normal;
 
 	return true;
+	*/
 }
 
 bool Quad::BoundingBox(float t0, float t1, AABB& output_box) const
@@ -182,4 +217,3 @@ bool Quad::GetUV(float a, float b, glm::vec2& uv)
 	uv.y = b;
 	return true;
 }
-
