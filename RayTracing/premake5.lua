@@ -1,4 +1,4 @@
-project "ParticleSystem"
+project "RayTracing"
    kind "ConsoleApp"
    language "C++"
    cppdialect "C++17"
@@ -12,6 +12,7 @@ project "ParticleSystem"
 
    includedirs
    {
+      "src",
       "../vendor/imgui",
       "../vendor/glfw/include",
       "../vendor/glad/include",
@@ -47,7 +48,6 @@ project "ParticleSystem"
       symbols "On"
 
    filter "configurations:Dist"
-      kind "WindowedApp"
       defines { "DIST" }
       runtime "Release"
       optimize "On"
