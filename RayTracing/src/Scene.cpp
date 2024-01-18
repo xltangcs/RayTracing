@@ -165,3 +165,20 @@ bool BVHNode::box_z_compare(const std::shared_ptr<SceneObject> a, const std::sha
 {
     return box_compare(a, b, 2);
 }
+
+Cube::Cube(const glm::vec3& a, const glm::vec3& b, int materialindex)
+{
+    auto min = glm::vec3(fmin(a.x, b.x), fmin(a.y, b.y), fmin(a.z, b.z));
+    auto max = glm::vec3(fmax(a.x, b.x), fmax(a.y, b.y), fmax(a.z, b.z));
+
+    auto dx = glm::vec3(max.x - min.x, 0, 0);
+    auto dy = glm::vec3(0, max.y - min.y, 0);
+    auto dz = glm::vec3(0, 0, max.z - min.z);
+
+    m_CubeScene->AddSceneObject(std::make_shared<Quad>(glm::vec3(min.x, min.y, max.z), dx, dy, materialindex)); // Ç°
+    m_CubeScene->AddSceneObject(std::make_shared<Quad>(glm::vec3(max.x, min.y, max.z), -dz, dy, materialindex)); // ÓÒ
+    m_CubeScene->AddSceneObject(std::make_shared<Quad>(glm::vec3(max.x, min.y, min.z), -dx, dy, materialindex)); // ºó
+    m_CubeScene->AddSceneObject(std::make_shared<Quad>(glm::vec3(min.x, min.y, min.z), dz, dy, materialindex)); // ×ó
+    m_CubeScene->AddSceneObject(std::make_shared<Quad>(glm::vec3(min.x, max.y, max.z), dx, -dz, materialindex)); // ¶¥
+    m_CubeScene->AddSceneObject(std::make_shared<Quad>(glm::vec3(min.x, min.y, min.z), dx, dz, materialindex)); // µ×
+}

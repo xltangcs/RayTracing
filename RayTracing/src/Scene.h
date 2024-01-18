@@ -19,6 +19,7 @@ public:
 	Scene(std::shared_ptr<SceneObject> object);
 
 	void AddSceneObject(std::shared_ptr<SceneObject> object);
+	//void AddCube(std::shared_ptr<SceneObject> object);
 
 	virtual bool Hit(const Ray& ray, float t_min, float t_max, HitPayload& payload) const;
 	virtual bool BoundingBox(float t0, float t1, AABB& output_box) const;
@@ -52,4 +53,12 @@ private:
 	std::shared_ptr<SceneObject> m_LeftChild;
 	std::shared_ptr<SceneObject> m_RightChild;
 	AABB m_BoundingBox;
+};
+
+class Cube : public Scene
+{
+public:
+	Cube(const glm::vec3& a, const glm::vec3& b, int materialindex);
+private:
+	std::shared_ptr<Scene> m_CubeScene;
 };

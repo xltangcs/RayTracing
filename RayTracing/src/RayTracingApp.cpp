@@ -175,9 +175,34 @@ public:
 				28);
 			NextWeek.AddSceneObject(quad);
 		}
+		NextWeek.AddSceneObject(std::make_shared<Sphere>(glm::vec3(-1.5f, -1.5f, 1.0f), 1.5f, 2));
+
+		{ //cube1
+			auto cube = Cube(glm::vec3(1.0f, -2.0f, 1.0f),
+				glm::vec3(1.5f, 1.5f, 2.0f),
+				28);
+			NextWeek.AddSceneObject(cube);
+		}
 
 
 		BVHNextWeek = BVHNode(NextWeek, 0, NextWeek.GetSceneObjectSize());
+	}
+
+	std::shared_ptr<Scene> Cube(const glm::vec3& a, const glm::vec3& b, int materialindex)
+	{
+		auto cube = std::make_shared<Scene>();
+		auto min = glm::vec3(fmin(a.x, b.x), fmin(a.y, b.y), fmin(a.z, b.z));
+		auto max = glm::vec3(fmax(a.x, b.x), fmax(a.y, b.y), fmax(a.z, b.z));
+		auto dx = glm::vec3(max.x - min.x, 0, 0);
+		auto dy = glm::vec3(0, max.y - min.y, 0);
+		auto dz = glm::vec3(0, 0, max.z - min.z);
+		cube->AddSceneObject(std::make_shared<Quad>(glm::vec3(min.x, min.y, max.z), dx, dy, materialindex)); // Ç°
+		cube->AddSceneObject(std::make_shared<Quad>(glm::vec3(max.x, min.y, max.z), -dz, dy,materialindex)); // ÓÒ
+		cube->AddSceneObject(std::make_shared<Quad>(glm::vec3(max.x, min.y, min.z), -dx, dy,materialindex)); // ºó
+		cube->AddSceneObject(std::make_shared<Quad>(glm::vec3(min.x, min.y, min.z), dz, dy, materialindex)); // ×ó
+		cube->AddSceneObject(std::make_shared<Quad>(glm::vec3(min.x, max.y, max.z), dx, -dz,materialindex)); // ¶¥
+		cube->AddSceneObject(std::make_shared<Quad>(glm::vec3(min.x, min.y, min.z), dx, dz, materialindex)); // µ×
+		return cube;
 	}
 
 	virtual void OnUpdate(float ts) override
