@@ -10,29 +10,24 @@
 
 #include "Tools/Application.h"
 #include "Tools/Image.h"
-#include "RayTracing/Renderer.h"
 
+#include "RayTracing/Renderer.h"
+#include "RayTracing/HittableList.h"
+#include "RayTracing/Sphere.h"
 
 
 class MyImGuiLayer : public ImGuiLayer
 {
 public:
 	MyImGuiLayer()
+		:m_Camera(glm::vec3(0.0f, 0.0f, 0.0f), 16.0f / 9.0f)
 	{
-
+		m_World.add(make_shared<Sphere>(glm::vec3(0.0f, 0.0f, -1.0f), 0.5f));
+		m_World.add(make_shared<Sphere>(glm::vec3(0.0f, -100.5f, -1.0f), 100.0f));
 	}
 
 	virtual void ShowUI(float ts) override
 	{
-		ImGui::Begin("Image");
-		static Image image2("./assets/textures/Checkerboard.png");
-		ImGui::Image((void*)image2.GetTextureID(),
-			ImVec2{ (float)image2.GetWidth(), (float)image2.GetHeight() },
-			ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-
-		ImGui::End();
-
-
 		ImGui::Begin("Viewport");
 
 		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
@@ -48,29 +43,30 @@ public:
 
 		ImGui::End();
 
-		
-
-		Render();
+		OnRender();
 
 	}
 
-	void Render()
+	void OnRender()
 	{
-		m_Renderer.Render();
+		m_Renderer.Render(m_Camera, m_World);
 	}
 
 
 	virtual void OnUpdate(float ts) override
 	{
 		glViewport(0, 0, (GLsizei)m_ViewportSize.x, (GLsizei)m_ViewportSize.y);
+		m_Camera.OnResize(m_ViewportSize.x, m_ViewportSize.y);
 		m_Renderer.OnResize(m_ViewportSize.x, m_ViewportSize.y);
 	}
 
 private:
 	glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
-	glm::vec2 m_ViewportBounds[2];
+	glm::vec2 m_ViewportBounds[2] = {};
 
 	Renderer m_Renderer;
+	Camera m_Camera;
+	Hittable_list m_World;
 };
 
 
